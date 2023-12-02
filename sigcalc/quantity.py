@@ -12,7 +12,7 @@
 
 """Quantity class for significant figure calculations."""
 
-import decimal
+from decimal import Decimal
 
 
 class Quantity:
@@ -20,9 +20,9 @@ class Quantity:
 
     def __init__(self, value, figures):
         """Initialize a ``Quantity()``."""
-        self.value = decimal.Decimal(str(value))
+        self.value = Decimal(str(value))
         self.reported = self.value
-        self.figures = decimal.Decimal(str(figures))
+        self.figures = Decimal(str(figures))
 
     def __add__(self, other):
         """Add two ``Quantity()`` objects."""
