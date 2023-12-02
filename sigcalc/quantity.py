@@ -65,10 +65,16 @@ class Quantity:
         """Subtract two ``Quantity()`` objects."""
         return self + -other
 
-    def __mult__(self, other):
+    def __mul__(self, other):
         """Multiply two ``Quantity`` objects."""
-        raise NotImplementedError
+        if isinstance(other, Quantity):
+            return Quantity(self.value * other.value, min(self.figures, other.figures))
 
-    def __div__(self, other):
+        return NotImplemented
+
+    def __truediv__(self, other):
         """Divide two ``Quantity`` objects."""
-        raise NotImplementedError
+        if isinstance(other, Quantity):
+            return Quantity(self.value / other.value, min(self.figures, other.figures))
+
+        return NotImplemented
