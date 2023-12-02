@@ -62,4 +62,4 @@ repos:
     rev: v1.5.2
     hooks:
       - id: dead
-        args: ["--tests", "test_.*\\.py"]
+        args: ["--tests", "test_.*\\.py", "--exclude", "docs/conf.py"]
