@@ -14,7 +14,41 @@
 
 from sigcalc import Quantity
 
+# Output operations tests.
 
+
+# Unary operations tests.
+def test_abs():
+    """Should return the absolute value of a ``Quantity`` object."""
+    assert abs(Quantity("3.14", "3")) == Quantity("3.14", "3")
+    assert abs(Quantity("-3.14", "3")) == Quantity("3.14", "3")
+    assert abs(Quantity("+3.14", "3")) == Quantity("3.14", "3")
+    assert abs(Quantity("0", "3")) == Quantity("0", "3")
+    assert abs(Quantity("-0", "3")) == Quantity("0", "3")
+    assert abs(Quantity("+0", "3")) == Quantity("0", "3")
+
+
+def test_neg():
+    """Should return the negation of a ``Quantity`` object."""
+    assert -Quantity("3.14", "3") == Quantity("-3.14", "3")
+    assert -Quantity("-3.14", "3") == Quantity("3.14", "3")
+    assert -Quantity("+3.14", "3") == Quantity("-3.14", "3")
+    assert -Quantity("0", "3") == Quantity("-0", "3")
+    assert -Quantity("-0", "3") == Quantity("0", "3")
+    assert -Quantity("+0", "3") == Quantity("0", "3")
+
+
+def test_pos():
+    """Should return the positive of a ``Quantity`` object."""
+    assert +Quantity("3.14", "3") == Quantity("3.14", "3")
+    assert +Quantity("-3.14", "3") == Quantity("-3.14", "3")
+    assert +Quantity("+3.14", "3") == Quantity("3.14", "3")
+    assert +Quantity("0", "3") == Quantity("0", "3")
+    assert +Quantity("-0", "3") == Quantity("0", "3")
+    assert +Quantity("+0", "3") == Quantity("0", "3")
+
+
+# Comparisons tests.
 def test_equal():
     """Equal ``Quantity`` objects should be equal."""
     assert Quantity("3.14", "3") == Quantity("3.14", "3")
@@ -36,6 +70,7 @@ def test_not_equal():
     assert Quantity("3.14", "3") != Quantity("3.13", "4")
 
 
+# Arithmetic operations tests.
 def test_add():
     """Quantities should add."""
     assert Quantity("3.14", "3") + Quantity("2.72", "3") == Quantity("5.86", "3")

@@ -26,25 +26,22 @@ class Quantity:
         self.figures = Decimal(str(figures))
         self.rounding = rounding
 
-    def __add__(self, other):
-        """Add two ``Quantity()`` objects."""
-        if isinstance(other, Quantity):
-            return Quantity(self.value + other.value, self.figures)
-        else:
-            raise TypeError(f"{other} is not a ``Quantity()``.")
+    # Output operations.
 
-    def __sub__(self, other):
-        """Subtract two ``Quantity()`` objects."""
-        return self + -other
-
+    # Unary operations.
     def __neg__(self):
         """Negate a ``Quantity()`` object."""
         return Quantity(-self.value, self.figures)
+
+    def __pos__(self):
+        """Return a ``Quantity()`` object."""
+        return Quantity(self.value, self.figures)
 
     def __abs__(self):
         """Calculate the magnitude of a ``Quantity()`` object."""
         return Quantity(abs(self.value), self.figures)
 
+    # Comparisons.
     def __eq__(self, other):
         """Calculate the magnitude of a ``Quantity()`` object."""
         if (
@@ -55,6 +52,18 @@ class Quantity:
             return True
 
         return False
+
+    # Arithmetic operations.
+    def __add__(self, other):
+        """Add two ``Quantity()`` objects."""
+        if isinstance(other, Quantity):
+            return Quantity(self.value + other.value, self.figures)
+        else:
+            raise TypeError(f"{other} is not a ``Quantity()``.")
+
+    def __sub__(self, other):
+        """Subtract two ``Quantity()`` objects."""
+        return self + -other
 
     def __mult__(self, other):
         """Multiply two ``Quantity`` objects."""
