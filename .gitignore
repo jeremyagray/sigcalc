@@ -1,0 +1,31 @@
+# ******************************************************************************
+#
+# sigcalc, significant figures calculations
+#
+# Copyright 2023 Jeremy A Gray <gray@flyquackswim.com>.
+#
+# All rights reserved.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# ******************************************************************************
+
+# Emacs.
+*~
+.dir-locals.el
+
+# Python.
+*.egg-info
+*.pyc
+.coverage
+.hypothesis/
+.pytest_cache
+.python-version
+.tox
+.venv
+__pycache__
+build
+commit
+dist/
+docs/_build/
+htmlcov
