@@ -58,8 +58,8 @@ class Quantity:
         """Add two ``Quantity()`` objects."""
         if isinstance(other, Quantity):
             return Quantity(self.value + other.value, self.figures)
-        else:
-            raise TypeError(f"{other} is not a ``Quantity()``.")
+
+        return NotImplemented
 
     def __sub__(self, other):
         """Subtract two ``Quantity()`` objects."""

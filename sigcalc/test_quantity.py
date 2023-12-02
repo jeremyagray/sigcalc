@@ -12,6 +12,8 @@
 
 """Quantity class tests."""
 
+import pytest
+
 from sigcalc import Quantity
 
 # Output operations tests.
@@ -77,7 +79,23 @@ def test_add():
     assert Quantity("3.14", "3") + Quantity("0.272", "3") == Quantity("3.41", "3")
 
 
+def test_add_bad_types():
+    """Only quantities should add."""
+    with pytest.raises(TypeError):
+        Quantity("3.14", "3") + 3
+    with pytest.raises(TypeError):
+        3 + Quantity("3.14", "3")
+
+
 def test_sub():
     """Quantities should subtract."""
     assert Quantity("3.14", "3") - Quantity("2.72", "3") == Quantity("0.42", "2")
-    assert Quantity("3.14", "3") + Quantity("0.272", "3") == Quantity("3.41", "3")
+    assert Quantity("3.14", "3") - Quantity("0.272", "3") == Quantity("2.868", "3")
+
+
+def test_sub_bad_types():
+    """Only quantities should subtract."""
+    with pytest.raises(TypeError):
+        Quantity("3.14", "3") - 3
+    with pytest.raises(TypeError):
+        3 - Quantity("3.14", "3")
