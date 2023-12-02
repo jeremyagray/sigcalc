@@ -12,17 +12,19 @@
 
 """Quantity class for significant figure calculations."""
 
+from decimal import ROUND_HALF_UP
 from decimal import Decimal
 
 
 class Quantity:
     """A quantity for significant figure calculations."""
 
-    def __init__(self, value, figures):
+    def __init__(self, value, figures, rounding=ROUND_HALF_UP):
         """Initialize a ``Quantity()``."""
         self.value = Decimal(str(value))
         self.reported = self.value
         self.figures = Decimal(str(figures))
+        self.rounding = rounding
 
     def __add__(self, other):
         """Add two ``Quantity()`` objects."""
