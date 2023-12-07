@@ -12,8 +12,52 @@
 
 """Quantity class for significant figure calculations."""
 
+import math
 from decimal import ROUND_HALF_UP
 from decimal import Decimal
+
+
+def _most_significant_place(num):
+    """Find the most significant place of a number.
+
+    Find the most significant place of a number and return it as the
+    exponent for a power of ten corresponding to the place value.
+
+    Parameters
+    ----------
+    num : Decimal
+        The number whose most significant place is needed.
+
+    Returns
+    -------
+    Decimal
+        The exponent of the most significant place.
+    """
+    return Decimal(math.floor(math.log10(abs(num))))
+
+
+def _least_significant_place(num):
+    """Find the least significant place of a number.
+
+    Find the least significant place of a number and return it as the
+    exponent for a power of ten corresponding to the place value.
+
+    Parameters
+    ----------
+    num : Decimal
+        The number whose least significant place is needed.
+
+    Returns
+    -------
+    Decimal
+        The exponent of the least significant place.
+    """
+    place = _most_significant_place(num)
+    rem = abs(num) % Decimal(f"1e{place}")
+    while rem > 0:
+        place -= 1
+        rem = rem % Decimal(f"1e{place}")
+    return place
 
 
 class Quantity:
@@ -27,6 +71,9 @@ class Quantity:
         self.rounding = rounding
 
     # Output operations.
+    def __repr__(self):
+        """Represent a ``Quantity``."""
+        return f"Quantity({self.value}, {self.figures}, {self.rounding})"
 
     # Unary operations.
     def __neg__(self):
@@ -57,7 +104,16 @@ class Quantity:
     def __add__(self, other):
         """Add two ``Quantity()`` objects."""
         if isinstance(other, Quantity):
-            return Quantity(self.value + other.value, self.figures)
+            value = self.value + other.value
+            least = max(
+                _most_significant_place(self.value) - self.figures + 1,
+                _most_significant_place(other.value) - other.figures + 1,
+            )
+            most = max(
+                _most_significant_place(value),
+                _most_significant_place(value.quantize(Decimal(f"1e{least}"))),
+            )
+            return Quantity(value, most - least + 1)
 
         return NotImplemented
 

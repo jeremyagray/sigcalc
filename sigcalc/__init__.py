@@ -13,3 +13,5 @@
 """sigcalc module initialization."""
 
 from .quantity import Quantity
+from .quantity import _least_significant_place
+from .quantity import _most_significant_place
