@@ -115,6 +115,15 @@ def test__least_significant_place():
 
 
 # Output operations tests.
+def test___repr__():
+    """Should reproduce a ``Quantity`` object."""
+    q = Quantity("3.14", "3")
+    assert repr(q) == (
+        f"Quantity({str(q.value)}, {str(q.figures)},"
+        f" constant={q.constant}, rounding={q.rounding})"
+    )
+
+
 # Unary operations tests.
 def test_abs():
     """Should return the absolute value of a ``Quantity`` object."""
@@ -124,6 +133,10 @@ def test_abs():
     assert abs(Quantity("0", "3")) == Quantity("0", "3")
     assert abs(Quantity("-0", "3")) == Quantity("0", "3")
     assert abs(Quantity("+0", "3")) == Quantity("0", "3")
+    # Constants.
+    assert abs(Quantity("3.14", "3", constant=True)) == Quantity(
+        "3.14", "3", constant=True
+    )
 
 
 def test_neg():
@@ -134,6 +147,10 @@ def test_neg():
     assert -Quantity("0", "3") == Quantity("-0", "3")
     assert -Quantity("-0", "3") == Quantity("0", "3")
     assert -Quantity("+0", "3") == Quantity("0", "3")
+    # Constants.
+    assert -Quantity("3.14", "3", constant=True) == Quantity(
+        "-3.14", "3", constant=True
+    )
 
 
 def test_pos():
@@ -144,6 +161,8 @@ def test_pos():
     assert +Quantity("0", "3") == Quantity("0", "3")
     assert +Quantity("-0", "3") == Quantity("0", "3")
     assert +Quantity("+0", "3") == Quantity("0", "3")
+    # Constants.
+    assert +Quantity("3.14", "3", constant=True) == Quantity("3.14", "3", constant=True)
 
 
 # Comparisons tests.
@@ -152,6 +171,8 @@ def test_equal():
     assert Quantity("3.14", "3") == Quantity("3.14", "3")
     assert Quantity("3.140", "3") == Quantity("3.14", "3")
     assert Quantity("3.14", "3") == Quantity("3.140", "3")
+    # Constants.
+    assert Quantity("3.14", "3", constant=True) == Quantity("3.14", "3", constant=True)
 
 
 def test_not_equal():
@@ -166,6 +187,9 @@ def test_not_equal():
     assert Quantity("3.14", "3") != Quantity("3.13", "2")
     assert Quantity("3.14", "3") != Quantity("3.13", "3")
     assert Quantity("3.14", "3") != Quantity("3.13", "4")
+    # Constants.
+    assert Quantity("3.14", "3", constant=True) != Quantity("3.14", "3")
+    assert Quantity("3.14", "3") != Quantity("3.14", "3", constant=True)
 
 
 # Arithmetic operations tests.
@@ -181,6 +205,16 @@ def test_add():
         "5.86e-8", "3"
     )
     assert Quantity("3.14e8", "3") + Quantity("2.72e8", "3") == Quantity("5.86e8", "3")
+    # Constants.
+    assert Quantity("3.1415", "5") + Quantity("2.72", "3", constant=True) == Quantity(
+        "5.8615", "5"
+    )
+    assert Quantity("3.1415", "5", constant=True) + Quantity("2.72", "3") == Quantity(
+        "5.8615", "3"
+    )
+    assert Quantity("3.1415", "5", constant=True) + Quantity(
+        "2.72", "3", constant=True
+    ) == Quantity("5.8615", "5", constant=True)
 
 
 def test_add_bad_types():
@@ -209,6 +243,25 @@ def test_sub():
     assert Quantity("100", "1") - Quantity("0.005", "1") == Quantity("99.995", "1")
     assert Quantity("100", "1") - Quantity("0.006", "1") == Quantity("99.994", "1")
     assert Quantity("100.0", "4") - Quantity("0.001", "1") == Quantity("99.999", "4")
+    # Constants.
+    assert Quantity("3.1415", "5") - Quantity("1.12", "3", constant=True) == Quantity(
+        "2.0215", "5"
+    )
+    assert Quantity("3.1415", "5", constant=True) - Quantity("1.12", "3") == Quantity(
+        "2.0215", "3"
+    )
+    assert Quantity("3.1415", "5", constant=True) - Quantity(
+        "1.12", "3", constant=True
+    ) == Quantity("2.0215", "4", constant=True)
+    assert Quantity("3.1415", "5") - Quantity("2.72", "3", constant=True) == Quantity(
+        "0.4215", "4"
+    )
+    assert Quantity("3.1415", "5", constant=True) - Quantity("2.72", "3") == Quantity(
+        "0.4215", "2"
+    )
+    assert Quantity("3.1415", "5", constant=True) - Quantity(
+        "2.72", "3", constant=True
+    ) == Quantity("0.4215", "4", constant=True)
 
 
 def test_sub_bad_types():
@@ -230,6 +283,16 @@ def test_mult():
     assert Quantity("0.00314", "3") * Quantity("0.00272", "3") == Quantity(
         "0.0000085408", "3"
     )
+    # Constants.
+    assert Quantity("3.1415", "5") * Quantity("2.72", "3", constant=True) == Quantity(
+        "8.54488", "5"
+    )
+    assert Quantity("2.72", "3", constant=True) * Quantity("3.1415", "5") == Quantity(
+        "8.54488", "5"
+    )
+    assert Quantity("2.72", "3", constant=True) * Quantity(
+        "3.1415", "5", constant=True
+    ) == Quantity("8.54488", "5", constant=True)
 
 
 def test_mul_bad_types():
@@ -256,6 +319,16 @@ def test_div():
     assert Quantity("0.0085408", "3") / Quantity("2.72", "3") == Quantity(
         "0.00314", "3"
     )
+    # Constants.
+    assert Quantity("3.1415", "5") / Quantity("2.72", "3", constant=True) == Quantity(
+        "1.154963235294117647058823529", "5"
+    )
+    assert Quantity("3.1415", "5", constant=True) / Quantity("2.72", "3") == Quantity(
+        "1.154963235294117647058823529", "3"
+    )
+    assert Quantity("3.1415", "5", constant=True) / Quantity(
+        "2.72", "3", constant=True
+    ) == Quantity("1.154963235294117647058823529", "3", constant=True)
 
 
 def test_div_bad_types():
@@ -281,8 +354,7 @@ def test_textbook_examples():
     assert (Quantity("12.4", "3") * Quantity("7.943", "4")) + Quantity(
         "0.0064", "2"
     ) == Quantity("98.4996", "3")
-    # The divisor (26) should be a constant.
-    assert (Quantity("246.83", "5") / Quantity("26", "5")) - Quantity(
+    assert (Quantity("246.83", "5") / Quantity("26", "5", constant=True)) - Quantity(
         "1.349", "4"
     ) == Quantity("8.144461538461538461538461538", "4")
     assert (Quantity("215.6", "4") - Quantity("110.4", "4")) / Quantity(
@@ -291,3 +363,33 @@ def test_textbook_examples():
     assert Quantity("653550", "5") / Quantity("142.3", "4") == Quantity(
         "4592.761770906535488404778637", "4"
     )
+
+
+def test_is_constant():
+    """Constant ``Quantity`` objects should return ``True``."""
+    q = Quantity("3.14", "3")
+    assert q.is_constant() is False
+    q = Quantity("3.14", "3", constant=False)
+    assert q.is_constant() is False
+    q = Quantity("3.14", "3", constant=True)
+    assert q.is_constant() is True
+
+
+def test_create_constant():
+    """Should create and return constant ``Quantity`` objects."""
+    q = Quantity("3.14", "3")
+    r = q.create_constant()
+    assert q.is_constant() is True
+    assert r.is_constant() is True
+
+
+def test_create_constant_idempotent():
+    """Should create and return constant ``Quantity`` objects."""
+    q = Quantity("3.14", "3")
+    r = q.create_constant()
+    assert q.is_constant() is True
+    assert r.is_constant() is True
+    q.create_constant()
+    r.create_constant()
+    assert q.is_constant() is True
+    assert r.is_constant() is True

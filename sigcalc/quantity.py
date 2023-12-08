@@ -15,6 +15,7 @@
 import math
 from decimal import ROUND_HALF_UP
 from decimal import Decimal
+from decimal import getcontext
 
 
 def _most_significant_place(num):
@@ -63,36 +64,58 @@ def _least_significant_place(num):
 class Quantity:
     """A quantity for significant figure calculations."""
 
-    def __init__(self, value, figures, rounding=ROUND_HALF_UP):
-        """Initialize a ``Quantity()``."""
+    def __init__(self, value, figures, constant=False, rounding=ROUND_HALF_UP):
+        """Initialize a ``Quantity()``.
+
+        Parameters
+        ----------
+        value : str
+            Value of the quantity, to be converted to a ``Decimal``.
+        figures : str
+            Significant figures of the quantity, to be converted to a
+            ``Decimal``.
+        constant : boolean
+            Set as constant (unlimited precision), or not.
+        rounding : str
+            Rounding mode selected fromt the modes in ``decimal``.
+        """
         self.value = Decimal(str(value))
         self.reported = self.value
-        self.figures = Decimal(str(figures))
+        if not constant:
+            self.figures = Decimal(str(figures))
+        else:
+            self.figures = getcontext().prec
+        self.constant = constant
         self.rounding = rounding
 
     # Output operations.
     def __repr__(self):
         """Represent a ``Quantity``."""
-        return f"Quantity({self.value}, {self.figures}, {self.rounding})"
+        return (
+            f"Quantity({self.value}, {self.figures},"
+            f" constant={self.constant}, rounding={self.rounding})"
+        )
 
     # Unary operations.
     def __neg__(self):
         """Negate a ``Quantity()`` object."""
-        return Quantity(-self.value, self.figures)
+        return Quantity(-self.value, self.figures, self.constant, self.rounding)
 
     def __pos__(self):
         """Return a ``Quantity()`` object."""
-        return Quantity(self.value, self.figures)
+        return Quantity(self.value, self.figures, self.constant, self.rounding)
 
     def __abs__(self):
         """Calculate the magnitude of a ``Quantity()`` object."""
-        return Quantity(abs(self.value), self.figures)
+        return Quantity(abs(self.value), self.figures, self.constant, self.rounding)
 
     # Comparisons.
     def __eq__(self, other):
         """Calculate the magnitude of a ``Quantity()`` object."""
         if (
             isinstance(other, Quantity)
+            and self.constant == other.constant
+            and self.rounding == other.rounding
             and self.value == other.value
             and self.figures == other.figures
         ):
@@ -105,14 +128,24 @@ class Quantity:
         """Add two ``Quantity()`` objects."""
         if isinstance(other, Quantity):
             value = self.value + other.value
-            least = max(
-                _most_significant_place(self.value) - self.figures + 1,
-                _most_significant_place(other.value) - other.figures + 1,
-            )
+
+            if self.is_constant() and other.is_constant():
+                return Quantity(value, getcontext().prec, constant=True)
+            elif self.is_constant() and not other.is_constant():
+                least = _most_significant_place(other.value) - other.figures + 1
+            elif other.is_constant() and not self.is_constant():
+                least = _most_significant_place(self.value) - self.figures + 1
+            else:
+                least = max(
+                    _most_significant_place(self.value) - self.figures + 1,
+                    _most_significant_place(other.value) - other.figures + 1,
+                )
+
             most = max(
                 _most_significant_place(value),
                 _most_significant_place(value.quantize(Decimal(f"1e{least}"))),
             )
+
             return Quantity(value, most - least + 1)
 
         return NotImplemented
@@ -124,13 +157,53 @@ class Quantity:
     def __mul__(self, other):
         """Multiply two ``Quantity`` objects."""
         if isinstance(other, Quantity):
-            return Quantity(self.value * other.value, min(self.figures, other.figures))
+            if self.is_constant() and other.is_constant():
+                return Quantity(
+                    self.value * other.value, getcontext().prec, constant=True
+                )
+            elif self.is_constant() and not other.is_constant():
+                return Quantity(self.value * other.value, other.figures)
+            elif other.is_constant() and not self.is_constant():
+                return Quantity(self.value * other.value, self.figures)
+            else:
+                return Quantity(
+                    self.value * other.value, min(self.figures, other.figures)
+                )
 
         return NotImplemented
 
     def __truediv__(self, other):
         """Divide two ``Quantity`` objects."""
         if isinstance(other, Quantity):
-            return Quantity(self.value / other.value, min(self.figures, other.figures))
+            if self.is_constant() and other.is_constant():
+                return Quantity(
+                    self.value / other.value, getcontext().prec, constant=True
+                )
+            elif self.is_constant() and not other.is_constant():
+                return Quantity(self.value / other.value, other.figures)
+            elif other.is_constant() and not self.is_constant():
+                return Quantity(self.value / other.value, self.figures)
+            else:
+                return Quantity(
+                    self.value / other.value, min(self.figures, other.figures)
+                )
 
         return NotImplemented
+
+    def is_constant(self):
+        """Determine if a ``Quantity`` is a constant."""
+        return self.constant
+
+    def create_constant(self):  # dead: disable
+        """Convert a ``Quantity`` into a constant.
+
+        Convert ``self`` into a constant.
+
+        Returns
+        -------
+        Quantity
+            A new ``Quantity`` object equal to ``self`` and converted
+            to a constant.
+        """
+        self.constant = True
+        return Quantity(self.value, getcontext().prec, self.constant, self.rounding)
