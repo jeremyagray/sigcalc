@@ -85,7 +85,7 @@ class Quantity:
             self.figures = Decimal(str(figures))
         else:
             self.figures = getcontext().prec
-        self.constant = constant
+        self._constant = constant
         self.rounding = rounding
 
     # Output operations.
@@ -134,11 +134,11 @@ class Quantity:
         if isinstance(other, Quantity):
             value = self.value + other.value
 
-            if self.is_constant() and other.is_constant():
+            if self.constant and other.constant:
                 return Quantity(value, getcontext().prec, constant=True)
-            elif self.is_constant() and not other.is_constant():
+            elif self.constant and not other.constant:
                 least = _most_significant_place(other.value) - other.figures + 1
-            elif other.is_constant() and not self.is_constant():
+            elif other.constant and not self.constant:
                 least = _most_significant_place(self.value) - self.figures + 1
             else:
                 least = max(
@@ -162,13 +162,13 @@ class Quantity:
     def __mul__(self, other):
         """Multiply two ``Quantity`` objects."""
         if isinstance(other, Quantity):
-            if self.is_constant() and other.is_constant():
+            if self.constant and other.constant:
                 return Quantity(
                     self.value * other.value, getcontext().prec, constant=True
                 )
-            elif self.is_constant() and not other.is_constant():
+            elif self.constant and not other.constant:
                 return Quantity(self.value * other.value, other.figures)
-            elif other.is_constant() and not self.is_constant():
+            elif other.constant and not self.constant:
                 return Quantity(self.value * other.value, self.figures)
             else:
                 return Quantity(
@@ -180,13 +180,13 @@ class Quantity:
     def __truediv__(self, other):
         """Divide two ``Quantity`` objects."""
         if isinstance(other, Quantity):
-            if self.is_constant() and other.is_constant():
+            if self.constant and other.constant:
                 return Quantity(
                     self.value / other.value, getcontext().prec, constant=True
                 )
-            elif self.is_constant() and not other.is_constant():
+            elif self.constant and not other.constant:
                 return Quantity(self.value / other.value, other.figures)
-            elif other.is_constant() and not self.is_constant():
+            elif other.constant and not self.constant:
                 return Quantity(self.value / other.value, self.figures)
             else:
                 return Quantity(
@@ -195,20 +195,17 @@ class Quantity:
 
         return NotImplemented
 
-    def is_constant(self):
-        """Determine if a ``Quantity`` is a constant."""
-        return self.constant
+    @property
+    def constant(self):
+        """Mark a ``Quantity`` as a constant with unlimited precision."""
+        return self._constant
 
-    def create_constant(self):  # dead: disable
-        """Convert a ``Quantity`` into a constant.
+    @constant.setter
+    def constant(self, value):
+        """Set a ``Quantity`` object's ``constant`` property.
 
-        Convert ``self`` into a constant.
-
-        Returns
-        -------
-        Quantity
-            A new ``Quantity`` object equal to ``self`` and converted
-            to a constant.
+        Set a ``Quantity`` object's ``constant`` property to value, if
+        boolean.
         """
-        self.constant = True
-        return Quantity(self.value, getcontext().prec, self.constant, self.rounding)
+        if isinstance(value, bool):
+            self._constant = value

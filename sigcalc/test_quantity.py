@@ -375,31 +375,36 @@ def test_textbook_examples():
     )
 
 
-def test_is_constant():
+def test_constant():
     """Constant ``Quantity`` objects should return ``True``."""
     q = Quantity("3.14", "3")
-    assert q.is_constant() is False
+    assert q.constant is False
     q = Quantity("3.14", "3", constant=False)
-    assert q.is_constant() is False
+    assert q.constant is False
     q = Quantity("3.14", "3", constant=True)
-    assert q.is_constant() is True
+    assert q.constant is True
 
 
-def test_create_constant():
+def test_modify_constant():
     """Should create and return constant ``Quantity`` objects."""
     q = Quantity("3.14", "3")
-    r = q.create_constant()
-    assert q.is_constant() is True
-    assert r.is_constant() is True
+    q.constant = True
+    assert q.constant is True
+    q.constant = False
+    assert q.constant is False
+    q.constant = "howdy"
+    assert q.constant is False
 
 
 def test_create_constant_idempotent():
     """Should create and return constant ``Quantity`` objects."""
     q = Quantity("3.14", "3")
-    r = q.create_constant()
-    assert q.is_constant() is True
-    assert r.is_constant() is True
-    q.create_constant()
-    r.create_constant()
-    assert q.is_constant() is True
-    assert r.is_constant() is True
+    q.constant = True
+    q.constant = True
+    assert q.constant is True
+
+    r = Quantity("3.14", "3")
+    assert r.constant is False
+    r.constant = False
+    r.constant = False
+    assert r.constant is False
