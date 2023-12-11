@@ -12,6 +12,7 @@
 
 """Quantity class tests."""
 
+from decimal import ROUND_HALF_EVEN
 from decimal import Decimal
 
 import pytest
@@ -118,9 +119,18 @@ def test__least_significant_place():
 def test___repr__():
     """Should reproduce a ``Quantity`` object."""
     q = Quantity("3.14", "3")
+    assert repr(q) == f'Quantity("{str(q.value)}", "{str(q.figures)}")'
+    q = Quantity("3.14", "3", constant=True)
+    assert repr(q) == f'Quantity("{str(q.value)}", "{str(q.figures)}", constant=True)'
+    q = Quantity("3.14", "3", rounding=ROUND_HALF_EVEN)
+    assert (
+        repr(q)
+        == f'Quantity("{str(q.value)}", "{str(q.figures)}", rounding=ROUND_HALF_EVEN)'
+    )
+    q = Quantity("3.14", "3", constant=True, rounding=ROUND_HALF_EVEN)
     assert repr(q) == (
-        f"Quantity({str(q.value)}, {str(q.figures)},"
-        f" constant={q.constant}, rounding={q.rounding})"
+        f'Quantity("{str(q.value)}", "{str(q.figures)}",'
+        f" constant=True, rounding=ROUND_HALF_EVEN)"
     )
 
 

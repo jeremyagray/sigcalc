@@ -15,7 +15,7 @@ python-files =
 
 .PHONY : test-all
 test-all:
-	pytest -vv --cov sigcalc --cov-report term --cov-report html
+	pytest --doctest-modules --doctest-glob='*.rst' -vvvv --cov sigcalc --cov-report term --cov-report html
 
 .PHONY : build
 build : docs
@@ -53,7 +53,7 @@ lint-fix :
 
 .PHONY : test
 test :
-	pytest
+	pytest --doctest-modules --doctest-glob='*.rst'
 
 .PHONY : upload
 upload :

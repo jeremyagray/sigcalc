@@ -91,10 +91,15 @@ class Quantity:
     # Output operations.
     def __repr__(self):
         """Represent a ``Quantity``."""
-        return (
-            f"Quantity({self.value}, {self.figures},"
-            f" constant={self.constant}, rounding={self.rounding})"
-        )
+        rep = f'Quantity("{self.value}", "{self.figures}"'
+
+        if self.constant:
+            rep += f", constant={self.constant}"
+
+        if self.rounding != ROUND_HALF_UP:
+            rep += f", rounding={self.rounding}"
+
+        return rep + ")"
 
     # Unary operations.
     def __neg__(self):
