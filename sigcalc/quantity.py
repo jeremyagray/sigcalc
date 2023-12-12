@@ -37,30 +37,6 @@ def _most_significant_place(num):
     return Decimal(math.floor(math.log10(abs(num))))
 
 
-def _least_significant_place(num):
-    """Find the least significant place of a number.
-
-    Find the least significant place of a number and return it as the
-    exponent for a power of ten corresponding to the place value.
-
-    Parameters
-    ----------
-    num : Decimal
-        The number whose least significant place is needed.
-
-    Returns
-    -------
-    Decimal
-        The exponent of the least significant place.
-    """
-    place = _most_significant_place(num)
-    rem = abs(num) % Decimal(f"1e{place}")
-    while rem > 0:
-        place -= 1
-        rem = rem % Decimal(f"1e{place}")
-    return place
-
-
 class Quantity:
     """A quantity for significant figure calculations."""
 

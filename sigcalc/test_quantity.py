@@ -24,7 +24,6 @@ from decimal import Decimal
 import pytest
 
 from sigcalc import Quantity
-from sigcalc import _least_significant_place
 from sigcalc import _most_significant_place
 
 
@@ -73,52 +72,6 @@ def test__most_significant_place():
     assert _most_significant_place(Decimal("-0.00000003141592654")) == Decimal("-8")
     assert _most_significant_place(Decimal("-0.000000003141592654")) == Decimal("-9")
     assert _most_significant_place(Decimal("-0.0000000003141592654")) == Decimal("-10")
-
-
-def test__least_significant_place():
-    """Should return the power of the least significant place."""
-    assert _least_significant_place(Decimal("31415926540000000000")) == Decimal("10")
-    assert _least_significant_place(Decimal("3141592654000000000")) == Decimal("9")
-    assert _least_significant_place(Decimal("314159265400000000")) == Decimal("8")
-    assert _least_significant_place(Decimal("31415926540000000")) == Decimal("7")
-    assert _least_significant_place(Decimal("3141592654000000")) == Decimal("6")
-    assert _least_significant_place(Decimal("314159265400000")) == Decimal("5")
-    assert _least_significant_place(Decimal("31415926540000")) == Decimal("4")
-    assert _least_significant_place(Decimal("3141592654000")) == Decimal("3")
-    assert _least_significant_place(Decimal("314159265400")) == Decimal("2")
-    assert _least_significant_place(Decimal("31415926540")) == Decimal("1")
-    assert _least_significant_place(Decimal("3141592654")) == Decimal("0")
-    assert _least_significant_place(Decimal("314159265.4")) == Decimal("-1")
-    assert _least_significant_place(Decimal("31415926.54")) == Decimal("-2")
-    assert _least_significant_place(Decimal("3141592.654")) == Decimal("-3")
-    assert _least_significant_place(Decimal("314159.2654")) == Decimal("-4")
-    assert _least_significant_place(Decimal("31415.92654")) == Decimal("-5")
-    assert _least_significant_place(Decimal("3141.592654")) == Decimal("-6")
-    assert _least_significant_place(Decimal("314.1592654")) == Decimal("-7")
-    assert _least_significant_place(Decimal("31.41592654")) == Decimal("-8")
-    assert _least_significant_place(Decimal("3.141592654")) == Decimal("-9")
-    assert _least_significant_place(Decimal("0.3141592654")) == Decimal("-10")
-    assert _least_significant_place(Decimal("-31415926540000000000")) == Decimal("10")
-    assert _least_significant_place(Decimal("-3141592654000000000")) == Decimal("9")
-    assert _least_significant_place(Decimal("-314159265400000000")) == Decimal("8")
-    assert _least_significant_place(Decimal("-31415926540000000")) == Decimal("7")
-    assert _least_significant_place(Decimal("-3141592654000000")) == Decimal("6")
-    assert _least_significant_place(Decimal("-314159265400000")) == Decimal("5")
-    assert _least_significant_place(Decimal("-31415926540000")) == Decimal("4")
-    assert _least_significant_place(Decimal("-3141592654000")) == Decimal("3")
-    assert _least_significant_place(Decimal("-314159265400")) == Decimal("2")
-    assert _least_significant_place(Decimal("-31415926540")) == Decimal("1")
-    assert _least_significant_place(Decimal("-3141592654")) == Decimal("0")
-    assert _least_significant_place(Decimal("-314159265.4")) == Decimal("-1")
-    assert _least_significant_place(Decimal("-31415926.54")) == Decimal("-2")
-    assert _least_significant_place(Decimal("-3141592.654")) == Decimal("-3")
-    assert _least_significant_place(Decimal("-314159.2654")) == Decimal("-4")
-    assert _least_significant_place(Decimal("-31415.92654")) == Decimal("-5")
-    assert _least_significant_place(Decimal("-3141.592654")) == Decimal("-6")
-    assert _least_significant_place(Decimal("-314.1592654")) == Decimal("-7")
-    assert _least_significant_place(Decimal("-31.41592654")) == Decimal("-8")
-    assert _least_significant_place(Decimal("-3.141592654")) == Decimal("-9")
-    assert _least_significant_place(Decimal("-0.3141592654")) == Decimal("-10")
 
 
 # Output operations tests.
