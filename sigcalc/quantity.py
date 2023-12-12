@@ -34,6 +34,9 @@ def _most_significant_place(num):
     Decimal
         The exponent of the most significant place.
     """
+    if num == Decimal("0"):
+        return Decimal("0")
+
     return Decimal(math.floor(math.log10(abs(num))))
 
 

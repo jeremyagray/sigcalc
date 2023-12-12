@@ -74,6 +74,12 @@ def test__most_significant_place():
     assert _most_significant_place(Decimal("-0.0000000003141592654")) == Decimal("-10")
 
 
+def test__most_significant_place_zero():
+    """Should return zero as the most significant place for zero."""
+    assert _most_significant_place(Decimal("0")) == Decimal("0")
+    assert _most_significant_place(Decimal("0.000")) == Decimal("0")
+
+
 # Output operations tests.
 def test___repr__():
     """Should reproduce a ``Quantity`` object."""
