@@ -112,18 +112,39 @@ class Quantity:
         return Quantity(abs(self.value), self.figures, self.constant, self.rounding)
 
     # Comparisons.
+    def __lt__(self, other):
+        """Determine the ordering of two ``Quantity()`` objects."""
+        if isinstance(other, Quantity) and self._round() < other._round():
+            return True
+
+        return False
+
+    def __le__(self, other):
+        """Determine the ordering of two ``Quantity()`` objects."""
+        return self.__lt__(other) or self.__eq__(other)
+
     def __eq__(self, other):
-        """Calculate the magnitude of a ``Quantity()`` object."""
+        """Determine equality of two ``Quantity()`` objects."""
         if (
             isinstance(other, Quantity)
-            and self.constant == other.constant
-            and self.rounding == other.rounding
-            and self.value == other.value
+            and self._round() == other._round()
             and self.figures == other.figures
         ):
             return True
 
         return False
+
+    def __ne__(self, other):
+        """Determine the inequality of two ``Quantity()`` objects."""
+        return not self.__eq__(other)
+
+    def __gt__(self, other):
+        """Determine the ordering of two ``Quantity()`` objects."""
+        return not self.__lt__(other) and self.__ne__(other)
+
+    def __ge__(self, other):
+        """Determine the ordering of two ``Quantity()`` objects."""
+        return not self.__lt__(other)
 
     # Arithmetic operations.
     def __add__(self, other):

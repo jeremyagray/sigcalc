@@ -20,6 +20,7 @@ from decimal import ROUND_HALF_EVEN
 from decimal import ROUND_HALF_UP
 from decimal import ROUND_UP
 from decimal import Decimal
+from decimal import getcontext
 
 import pytest
 
@@ -293,30 +294,127 @@ def test_pos():
 
 
 # Comparisons tests.
-def test_equal():
+def test___lt__():
+    """Lesser ``Quantity`` objects should be ordered correctly."""
+    # Lesser value.
+    assert Quantity("3.14", "3") < Quantity("3.15", "3")
+    # Significance is irrelevant.
+    assert Quantity("3.14", "3") < Quantity("3.15", "5")
+    assert Quantity("3.14", "5") < Quantity("3.15", "3")
+    assert Quantity("3.14", "5") < Quantity("3.15", "3", constant=True)
+    # Check after rounding.
+    assert Quantity("3.135", "3", rounding=ROUND_HALF_DOWN) < Quantity(
+        "3.135", "3", rounding=ROUND_HALF_EVEN
+    )
+
+    # Greater value.
+    assert not Quantity("3.15", "3") < Quantity("3.14", "3")
+    # Significance is irrelevant.
+    assert not Quantity("3.15", "3") < Quantity("3.14", "5")
+    assert not Quantity("3.15", "5") < Quantity("3.14", "3")
+    assert not Quantity("3.15", "5") < Quantity("3.14", "3", constant=True)
+    # Check after rounding.
+    assert not Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) < Quantity(
+        "3.135", "3", rounding=ROUND_HALF_DOWN
+    )
+
+
+def test___le__():
+    """Less than or equal ``Quantity`` objects should be ordered correctly."""
+    # Lesser value.
+    assert Quantity("3.14", "3") <= Quantity("3.15", "3")
+    # Significance is irrelevant.
+    assert Quantity("3.14", "3") <= Quantity("3.15", "5")
+    assert Quantity("3.14", "5") <= Quantity("3.15", "3")
+    assert Quantity("3.14", "5") <= Quantity("3.15", "3", constant=True)
+    # Check after rounding.
+    assert Quantity("3.135", "3", rounding=ROUND_HALF_DOWN) <= Quantity(
+        "3.135", "3", rounding=ROUND_HALF_EVEN
+    )
+    # Equal values.
+    assert Quantity("3.14", "3") <= Quantity("3.14", "3")
+    assert Quantity("3.140", "3") <= Quantity("3.14", "3")
+    assert Quantity("3.14", "3") <= Quantity("3.140", "3")
+    # Equal values after rounding.
+    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) <= Quantity(
+        "3.145", "3", rounding=ROUND_HALF_DOWN
+    )
+    # Constants.
+    assert Quantity("3.14", "3", constant=True) <= Quantity("3.14", "5", constant=True)
+
+
+def test___eq__():
     """Equal ``Quantity`` objects should be equal."""
+    # Equal values.
     assert Quantity("3.14", "3") == Quantity("3.14", "3")
     assert Quantity("3.140", "3") == Quantity("3.14", "3")
     assert Quantity("3.14", "3") == Quantity("3.140", "3")
+    # Equal values after rounding.
+    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) == Quantity(
+        "3.145", "3", rounding=ROUND_HALF_DOWN
+    )
     # Constants.
-    assert Quantity("3.14", "3", constant=True) == Quantity("3.14", "3", constant=True)
+    assert Quantity("3.14", "3", constant=True) == Quantity("3.14", "5", constant=True)
+    assert Quantity("3.14", getcontext().prec) == Quantity("3.14", "5", constant=True)
 
 
-def test_not_equal():
+def test___ne__():
     """Unequal ``Quantity`` objects should not be equal."""
+    # Different significance.
     assert Quantity("3.14", "3") != Quantity("3.14", "2")
     assert Quantity("3.14", "3") != Quantity("3.14", "4")
-
+    # Different significance and values.
     assert Quantity("3.14", "3") != Quantity("3.15", "2")
     assert Quantity("3.14", "3") != Quantity("3.15", "3")
     assert Quantity("3.14", "3") != Quantity("3.15", "4")
-
     assert Quantity("3.14", "3") != Quantity("3.13", "2")
     assert Quantity("3.14", "3") != Quantity("3.13", "3")
     assert Quantity("3.14", "3") != Quantity("3.13", "4")
+    # Unequal values after rounding.
+    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) != Quantity(
+        "3.135", "3", rounding=ROUND_HALF_DOWN
+    )
     # Constants.
     assert Quantity("3.14", "3", constant=True) != Quantity("3.14", "3")
     assert Quantity("3.14", "3") != Quantity("3.14", "3", constant=True)
+
+
+def test___gt__():
+    """Greater ``Quantity`` objects should be greater."""
+    # Greater value.
+    assert Quantity("3.15", "3") > Quantity("3.14", "3")
+    # Significance is irrelevant.
+    assert Quantity("3.15", "3") > Quantity("3.14", "5")
+    assert Quantity("3.15", "5") > Quantity("3.14", "3")
+    assert Quantity("3.15", "5") > Quantity("3.14", "3", constant=True)
+    # Check after rounding.
+    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) > Quantity(
+        "3.135", "3", rounding=ROUND_HALF_DOWN
+    )
+
+
+def test___ge__():
+    """Greater than or equal ``Quantity`` objects should be ordered correctly."""
+    # Greater value.
+    assert Quantity("3.15", "3") >= Quantity("3.14", "3")
+    # Significance is irrelevant.
+    assert Quantity("3.15", "3") >= Quantity("3.14", "5")
+    assert Quantity("3.15", "5") >= Quantity("3.14", "3")
+    assert Quantity("3.15", "5") >= Quantity("3.14", "3", constant=True)
+    # Check after rounding.
+    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) >= Quantity(
+        "3.135", "3", rounding=ROUND_HALF_DOWN
+    )
+    # Equal values.
+    assert Quantity("3.14", "3") >= Quantity("3.14", "3")
+    assert Quantity("3.140", "3") >= Quantity("3.14", "3")
+    assert Quantity("3.14", "3") >= Quantity("3.140", "3")
+    # Equal values after rounding.
+    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) >= Quantity(
+        "3.145", "3", rounding=ROUND_HALF_DOWN
+    )
+    # Constants.
+    assert Quantity("3.14", "3", constant=True) >= Quantity("3.14", "5", constant=True)
 
 
 # Arithmetic operations tests.

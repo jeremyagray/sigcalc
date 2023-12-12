@@ -78,6 +78,42 @@ Traceback (most recent call last):
 ...
 TypeError: unsupported operand type(s) for //: 'Quantity' and 'Quantity'
 
+Comparisons behave as expected for real numbers, with the exception
+equality and significance.  Since quantities with different
+significance have different meanings, they are not equal as quantity
+objects:
+
+>>> from sigcalc import Quantity
+>>> from decimal import ROUND_HALF_EVEN
+>>> from decimal import ROUND_HALF_DOWN
+>>> a = Quantity("3.135", "3")
+>>> b = Quantity("3.135", "3", rounding=ROUND_HALF_EVEN)
+>>> c = Quantity("3.135", "3", rounding=ROUND_HALF_DOWN)
+>>> d = Quantity("3.145", "3")
+>>> e = Quantity("3.135", "4")
+>>> a == a
+True
+>>> a != b
+False
+>>> a == b
+True
+>>> a != c
+True
+>>> a < d
+True
+>>> a <= d
+True
+>>> a > d
+False
+>>> d > a
+True
+>>> d >= a
+True
+>>> a != e
+True
+>>> a == e
+False
+
 Rounding and output are tied together.  Typically, rounding is
 unnecessary except for output but is available:
 
