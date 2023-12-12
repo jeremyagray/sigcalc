@@ -12,7 +12,13 @@
 
 """Quantity class tests."""
 
+from decimal import ROUND_CEILING
+from decimal import ROUND_DOWN
+from decimal import ROUND_FLOOR
+from decimal import ROUND_HALF_DOWN
 from decimal import ROUND_HALF_EVEN
+from decimal import ROUND_HALF_UP
+from decimal import ROUND_UP
 from decimal import Decimal
 
 import pytest
@@ -132,6 +138,158 @@ def test___repr__():
         f'Quantity("{str(q.value)}", "{str(q.figures)}",'
         f" constant=True, rounding=ROUND_HALF_EVEN)"
     )
+
+
+def test___format__():
+    """Should format a ``Quantity`` object."""
+    # Big numbers.
+    q = Quantity("314", "1")
+    assert f"{q:.0f}" == "300"
+    assert f"{q:.0e}" == "3e+2"
+    q = Quantity("314", "2")
+    assert f"{q:.0f}" == "310"
+    assert f"{q:.1e}" == "3.1e+2"
+    q = Quantity("314", "3")
+    assert f"{q:.0f}" == "314"
+    assert f"{q:.2e}" == "3.14e+2"
+    q = Quantity("314", "4")
+    assert f"{q:.1f}" == "314.0"
+    assert f"{q:.3e}" == "3.140e+2"
+
+    q = Quantity("0.0314", "1")
+    assert f"{q:.0e}" == "3e-2"
+    q = Quantity("0.0314", "2")
+    assert f"{q:.1e}" == "3.1e-2"
+    q = Quantity("0.0314", "3")
+    assert f"{q:.2e}" == "3.14e-2"
+    q = Quantity("0.0314", "4")
+    assert f"{q:.3e}" == "3.140e-2"
+
+
+def test___str__():
+    """Should stringify a ``Quantity`` object."""
+    q = Quantity("3.14", "1", rounding=ROUND_HALF_UP)
+    assert str(q) == "3"
+    q = Quantity("3.14", "1", rounding=ROUND_HALF_DOWN)
+    assert str(q) == "3"
+    q = Quantity("3.14", "1", rounding=ROUND_HALF_EVEN)
+    assert str(q) == "3"
+    q = Quantity("3.14", "1", rounding=ROUND_CEILING)
+    assert str(q) == "4"
+    q = Quantity("3.14", "1", rounding=ROUND_FLOOR)
+    assert str(q) == "3"
+    q = Quantity("3.14", "1", rounding=ROUND_UP)
+    assert str(q) == "4"
+    q = Quantity("3.14", "1", rounding=ROUND_DOWN)
+    assert str(q) == "3"
+
+    q = Quantity("3.14", "2", rounding=ROUND_HALF_UP)
+    assert str(q) == "3.1"
+    q = Quantity("3.14", "2", rounding=ROUND_HALF_DOWN)
+    assert str(q) == "3.1"
+    q = Quantity("3.14", "2", rounding=ROUND_HALF_EVEN)
+    assert str(q) == "3.1"
+    q = Quantity("3.14", "2", rounding=ROUND_CEILING)
+    assert str(q) == "3.2"
+    q = Quantity("3.14", "2", rounding=ROUND_FLOOR)
+    assert str(q) == "3.1"
+    q = Quantity("3.14", "2", rounding=ROUND_UP)
+    assert str(q) == "3.2"
+    q = Quantity("3.14", "2", rounding=ROUND_DOWN)
+    assert str(q) == "3.1"
+
+    q = Quantity("3.14", "3", rounding=ROUND_HALF_UP)
+    assert str(q) == "3.14"
+    q = Quantity("3.14", "3", rounding=ROUND_HALF_DOWN)
+    assert str(q) == "3.14"
+    q = Quantity("3.14", "3", rounding=ROUND_HALF_EVEN)
+    assert str(q) == "3.14"
+    q = Quantity("3.14", "3", rounding=ROUND_CEILING)
+    assert str(q) == "3.14"
+    q = Quantity("3.14", "3", rounding=ROUND_FLOOR)
+    assert str(q) == "3.14"
+    q = Quantity("3.14", "3", rounding=ROUND_UP)
+    assert str(q) == "3.14"
+    q = Quantity("3.14", "3", rounding=ROUND_DOWN)
+    assert str(q) == "3.14"
+
+    q = Quantity("3.14", "4", rounding=ROUND_HALF_UP)
+    assert str(q) == "3.140"
+    q = Quantity("3.14", "4", rounding=ROUND_HALF_DOWN)
+    assert str(q) == "3.140"
+    q = Quantity("3.14", "4", rounding=ROUND_HALF_EVEN)
+    assert str(q) == "3.140"
+    q = Quantity("3.14", "4", rounding=ROUND_CEILING)
+    assert str(q) == "3.140"
+    q = Quantity("3.14", "4", rounding=ROUND_FLOOR)
+    assert str(q) == "3.140"
+    q = Quantity("3.14", "4", rounding=ROUND_UP)
+    assert str(q) == "3.140"
+    q = Quantity("3.14", "4", rounding=ROUND_DOWN)
+    assert str(q) == "3.140"
+
+    q = Quantity("3.145", "3", rounding=ROUND_HALF_UP)
+    assert str(q) == "3.15"
+    q = Quantity("3.145", "3", rounding=ROUND_HALF_DOWN)
+    assert str(q) == "3.14"
+    q = Quantity("3.145", "3", rounding=ROUND_HALF_EVEN)
+    assert str(q) == "3.14"
+    q = Quantity("3.145", "3", rounding=ROUND_CEILING)
+    assert str(q) == "3.15"
+    q = Quantity("3.145", "3", rounding=ROUND_FLOOR)
+    assert str(q) == "3.14"
+    q = Quantity("3.145", "3", rounding=ROUND_UP)
+    assert str(q) == "3.15"
+    q = Quantity("3.145", "3", rounding=ROUND_DOWN)
+    assert str(q) == "3.14"
+
+    q = Quantity("3.135", "3", rounding=ROUND_HALF_UP)
+    assert str(q) == "3.14"
+    q = Quantity("3.135", "3", rounding=ROUND_HALF_DOWN)
+    assert str(q) == "3.13"
+    q = Quantity("3.135", "3", rounding=ROUND_HALF_EVEN)
+    assert str(q) == "3.14"
+    q = Quantity("3.135", "3", rounding=ROUND_CEILING)
+    assert str(q) == "3.14"
+    q = Quantity("3.135", "3", rounding=ROUND_FLOOR)
+    assert str(q) == "3.13"
+    q = Quantity("3.135", "3", rounding=ROUND_UP)
+    assert str(q) == "3.14"
+    q = Quantity("3.135", "3", rounding=ROUND_DOWN)
+    assert str(q) == "3.13"
+
+    q = Quantity("-3.135", "3", rounding=ROUND_HALF_UP)
+    assert str(q) == "-3.14"
+    q = Quantity("-3.135", "3", rounding=ROUND_HALF_DOWN)
+    assert str(q) == "-3.13"
+    q = Quantity("-3.135", "3", rounding=ROUND_HALF_EVEN)
+    assert str(q) == "-3.14"
+    q = Quantity("-3.135", "3", rounding=ROUND_CEILING)
+    assert str(q) == "-3.13"
+    q = Quantity("-3.135", "3", rounding=ROUND_FLOOR)
+    assert str(q) == "-3.14"
+    q = Quantity("-3.135", "3", rounding=ROUND_UP)
+    assert str(q) == "-3.14"
+    q = Quantity("-3.135", "3", rounding=ROUND_DOWN)
+    assert str(q) == "-3.13"
+
+
+def test__round_constants():
+    """Constants should not round."""
+    q = Quantity("3.14", "2", constant=True)
+    assert q._round() == Decimal("3.14")
+
+
+def test_round_constants():
+    """Constants should not round."""
+    q = Quantity("3.14", "2", constant=True)
+    assert q.round() == q
+
+
+def test_round():
+    """Should round a ``Quantity`` object."""
+    q = Quantity("3.14", "2")
+    assert q.round() == Quantity("3.1", "2")
 
 
 # Unary operations tests.

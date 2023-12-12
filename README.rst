@@ -78,6 +78,41 @@ Traceback (most recent call last):
 ...
 TypeError: unsupported operand type(s) for //: 'Quantity' and 'Quantity'
 
+Rounding and output are tied together.  Typically, rounding is
+unnecessary except for output but is available:
+
+>>> a = Quantity("3.14", "2")
+>>> a.round()
+Quantity("3.1", "2")
+>>> a
+Quantity("3.14", "2")
+
+Rounding constants has no effect:
+
+>>> a = Quantity("3.145", "3", constant=True)
+>>> a.round()
+Quantity("3.145", "28", constant=True)
+
+String output uses the underlying ``decimal`` module's string output
+after rounding to the correct significant figures:
+
+>>> from decimal import ROUND_HALF_EVEN
+>>> a = Quantity("3.145", "3")
+>>> b = Quantity("3.145", "3", rounding=ROUND_HALF_EVEN)
+>>> str(a)
+'3.15'
+>>> str(b)
+'3.14'
+
+The rounding mode should be one of the modes available in ``decimal``.
+
+Likewise with formatting:
+
+>>> format(a, ".2e")
+'3.15e+0'
+>>> format(b, ".2e")
+'3.14e+0'
+
 The transcendental and exponential functions will be implemented as
 wrappers around the appropriate functions from ``decimal`` and
 ``mpmath``, calculating results based on the ``value`` of a

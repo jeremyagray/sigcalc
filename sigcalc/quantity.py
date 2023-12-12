@@ -77,7 +77,7 @@ class Quantity:
         constant : boolean
             Set as constant (unlimited precision), or not.
         rounding : str
-            Rounding mode selected fromt the modes in ``decimal``.
+            Rounding mode selected from the modes in ``decimal``.
         """
         self.value = Decimal(str(value))
         self.reported = self.value
@@ -100,6 +100,24 @@ class Quantity:
             rep += f", rounding={self.rounding}"
 
         return rep + ")"
+
+    def __format__(self, specifier):
+        """Format a ``Quantity`` object.
+
+        Format a ``Quantity`` object, rounding to significant figures
+        first and then passing any format specifier through to
+        ``Decimal().__format__()`` for formatting.
+        """
+        return format(self._round(), specifier)
+
+    def __str__(self):
+        """Stringify a ``Quantity`` object.
+
+        Stringify a ``Quantity`` object, rounding to significant
+        figures first and then using ``Decimal().__str__()`` for
+        stringification.
+        """
+        return str(self._round())
 
     # Unary operations.
     def __neg__(self):
@@ -209,3 +227,40 @@ class Quantity:
         """
         if isinstance(value, bool):
             self._constant = value
+
+    def _round(self):
+        """Round a ``Quantity`` object ``value`` to significant figures.
+
+        Round a ``Quantity`` object ``value`` to significant figures
+        using the current rounding mode, returning a ``Decimal``.
+        Return ``self.value`` unrounded if ``self.constant`` is
+        ``True``.
+
+        Returns
+        -------
+        Decimal
+            The rounded ``value`` of the ``Quantity``.
+        """
+        if self.constant:
+            return self.value
+
+        place = _most_significant_place(self.value) - self.figures + Decimal(1)
+        return self.value.quantize(Decimal(f"1e{place}"), rounding=self.rounding)
+
+    def round(self):  # dead: disable
+        """Round a ``Quantity`` object to significant figures.
+
+        Round a ``Quantity`` object to significant figures using the
+        current rounding mode, returning a new ``Quantity`` with only
+        the rounded significant figures.  Return a new ``Quantity``
+        equal to ``self`` unrounded if ``self.constant`` is ``True``.
+
+        Returns
+        -------
+        Quantity
+            A new ``Quantity`` equal to the rounded ``self``.
+        """
+        if self.constant:
+            return Quantity(self.value, self.figures, self.constant, self.rounding)
+
+        return Quantity(self._round(), self.figures, self.constant, self.rounding)
