@@ -17,6 +17,10 @@ python-files =
 test-all:
 	pytest --doctest-modules --doctest-glob='*.rst' -vvvv --cov sigcalc --cov-report term --cov-report html
 
+.PHONY : coverage-hypothesis
+coverage-hypothesis:
+	pytest -vvvv --cov sigcalc --cov-report term --cov-report html -k hypothesis
+
 .PHONY : build
 build : docs
 	pip install -q build
