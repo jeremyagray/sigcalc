@@ -244,7 +244,7 @@ class Quantity:
         if self.constant:
             return self.value
 
-        place = _most_significant_place(self.value) - self.figures + Decimal(1)
+        place = _most_significant_place(self.value) - self.figures + Decimal("1")
         return self.value.quantize(Decimal(f"1e{place}"), rounding=self.rounding)
 
     def round(self):  # dead: disable
