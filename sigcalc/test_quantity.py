@@ -12,6 +12,7 @@
 
 """Quantity class tests."""
 
+from decimal import ROUND_05UP
 from decimal import ROUND_CEILING
 from decimal import ROUND_DOWN
 from decimal import ROUND_FLOOR
@@ -142,6 +143,8 @@ def test___str__():
     assert str(q) == "4"
     q = Quantity("3.14", "1", rounding=ROUND_DOWN)
     assert str(q) == "3"
+    q = Quantity("3.14", "1", rounding=ROUND_05UP)
+    assert str(q) == "3"
 
     q = Quantity("3.14", "2", rounding=ROUND_HALF_UP)
     assert str(q) == "3.1"
@@ -172,6 +175,8 @@ def test___str__():
     assert str(q) == "3.14"
     q = Quantity("3.14", "3", rounding=ROUND_DOWN)
     assert str(q) == "3.14"
+    q = Quantity("3.14", "3", rounding=ROUND_05UP)
+    assert str(q) == "3.14"
 
     q = Quantity("3.14", "4", rounding=ROUND_HALF_UP)
     assert str(q) == "3.140"
@@ -186,6 +191,8 @@ def test___str__():
     q = Quantity("3.14", "4", rounding=ROUND_UP)
     assert str(q) == "3.140"
     q = Quantity("3.14", "4", rounding=ROUND_DOWN)
+    assert str(q) == "3.140"
+    q = Quantity("3.14", "4", rounding=ROUND_05UP)
     assert str(q) == "3.140"
 
     q = Quantity("3.145", "3", rounding=ROUND_HALF_UP)
@@ -202,6 +209,8 @@ def test___str__():
     assert str(q) == "3.15"
     q = Quantity("3.145", "3", rounding=ROUND_DOWN)
     assert str(q) == "3.14"
+    q = Quantity("3.145", "3", rounding=ROUND_05UP)
+    assert str(q) == "3.14"
 
     q = Quantity("3.135", "3", rounding=ROUND_HALF_UP)
     assert str(q) == "3.14"
@@ -216,6 +225,8 @@ def test___str__():
     q = Quantity("3.135", "3", rounding=ROUND_UP)
     assert str(q) == "3.14"
     q = Quantity("3.135", "3", rounding=ROUND_DOWN)
+    assert str(q) == "3.13"
+    q = Quantity("3.135", "3", rounding=ROUND_05UP)
     assert str(q) == "3.13"
 
     q = Quantity("-3.135", "3", rounding=ROUND_HALF_UP)
@@ -232,6 +243,13 @@ def test___str__():
     assert str(q) == "-3.14"
     q = Quantity("-3.135", "3", rounding=ROUND_DOWN)
     assert str(q) == "-3.13"
+    q = Quantity("-3.135", "3", rounding=ROUND_05UP)
+    assert str(q) == "-3.13"
+
+    q = Quantity("3.101", "3", rounding=ROUND_05UP)
+    assert str(q) == "3.11"
+    q = Quantity("3.151", "3", rounding=ROUND_05UP)
+    assert str(q) == "3.16"
 
 
 def test__round_constants():
