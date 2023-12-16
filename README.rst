@@ -52,6 +52,10 @@ Create ``Quantity`` objects as necessary:
 >>> a = Quantity("3.14", "3")
 >>> b = Quantity("2.72", "3")
 
+The precision of the underlying ``decimal`` context should adjust
+automatically to contain the number of digits specified or the number
+of significant figures, within the limits of the ``decimal`` module.
+
 Arithmetic for ``Quantity`` objects is implemented on the usual magic
 methods:
 

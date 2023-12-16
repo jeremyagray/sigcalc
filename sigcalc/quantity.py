@@ -59,6 +59,11 @@ class Quantity:
             Rounding mode selected from the modes in ``decimal``.
         """
         self.value = Decimal(str(value))
+
+        getcontext().prec = max(
+            getcontext().prec, int(figures), len(self.value.as_tuple().digits)
+        )
+
         self.reported = self.value
         if not constant:
             self.figures = Decimal(str(figures))

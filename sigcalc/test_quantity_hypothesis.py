@@ -42,7 +42,7 @@ def quantities(draw):
         draw(
             st.integers(
                 min_value=1,
-                max_value=getcontext().prec,
+                max_value=100,
             )
         ),
         draw(st.booleans()),
@@ -86,6 +86,12 @@ def test_abs_hypothesis(q):
     r = Quantity(abs(q.value), q.figures, q.constant, q.rounding)
     assert abs(q) == r
     assert abs(abs(q)) == r
+
+
+@given(quantities())
+def test_neg_hypothesis(q):
+    """Should negate ``Quantity`` objects."""
+    assert -(-q) == q
 
 
 @given(quantities())
