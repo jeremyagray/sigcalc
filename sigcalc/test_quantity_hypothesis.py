@@ -12,6 +12,7 @@
 
 """Quantity hypothesis tests."""
 
+from decimal import ROUND_05UP
 from decimal import ROUND_CEILING
 from decimal import ROUND_DOWN
 from decimal import ROUND_FLOOR
@@ -46,64 +47,114 @@ def quantities(draw):
             )
         ),
         draw(st.booleans()),
-        draw(
-            st.sampled_from(
-                [
-                    ROUND_CEILING,
-                    ROUND_DOWN,
-                    ROUND_FLOOR,
-                    ROUND_HALF_DOWN,
-                    ROUND_HALF_EVEN,
-                    ROUND_HALF_UP,
-                    ROUND_UP,
-                ]
-            )
-        ),
     )
 
 
-@given(quantities())
-def test_equality_hypothesis(q):
+@composite
+def rounding(draw):
+    """Generate a rounding mode."""
+    return draw(
+        st.sampled_from(
+            [
+                ROUND_CEILING,
+                ROUND_DOWN,
+                ROUND_FLOOR,
+                ROUND_HALF_DOWN,
+                ROUND_HALF_EVEN,
+                ROUND_HALF_UP,
+                ROUND_UP,
+                ROUND_05UP,
+            ]
+        )
+    )
+
+
+@given(quantities(), rounding())
+def test_equality_hypothesis(q, r):
     """Should order ``Quantity`` objects."""
+    getcontext().rounding = r
     assert q == q
     assert not q != q
 
 
-@given(quantities())
-def test_equality_different_precision_hypothesis(q):
+@given(quantities(), rounding())
+def test_equality_different_precision_hypothesis(q, r):
     """Should order ``Quantity`` objects."""
+    getcontext().rounding = r
     if q.figures == getcontext().prec:
-        r = Quantity(q.value, q.figures - Decimal("1"), False, q.rounding)
+        p = Quantity(q.value, q.figures - Decimal("1"), False)
     else:
-        r = Quantity(q.value, q.figures + Decimal("1"), q.constant, q.rounding)
+        p = Quantity(q.value, q.figures + Decimal("1"), q.constant)
 
-    assert q != r
+    assert q != p
 
 
-@given(quantities())
-def test_abs_hypothesis(q):
+@given(quantities(), rounding())
+def test_abs_hypothesis(q, r):
     """Should calculate absolute value of ``Quantity`` objects."""
-    r = Quantity(abs(q.value), q.figures, q.constant, q.rounding)
-    assert abs(q) == r
-    assert abs(abs(q)) == r
+    getcontext().rounding = r
+    p = Quantity(abs(q.value), q.figures, q.constant)
+    assert abs(q) == p
+    assert abs(abs(q)) == p
 
 
-@given(quantities())
-def test_neg_hypothesis(q):
+@given(quantities(), rounding())
+def test_neg_hypothesis(q, r):
     """Should negate ``Quantity`` objects."""
+    getcontext().rounding = r
     assert -(-q) == q
 
 
-@given(quantities())
-def test_pos_hypothesis(q):
+@given(quantities(), rounding())
+def test_pos_hypothesis(q, r):
     """Should return ``Quantity`` objects."""
-    r = Quantity(q.value, q.figures, q.constant, q.rounding)
+    getcontext().rounding = r
+    p = Quantity(q.value, q.figures, q.constant)
     assert +q == q
     assert ++q == q
-    assert +q == r
+    assert +q == p
 
 
-@given(quantities())
-def test_round_hypothesis(q):
+@given(quantities(), rounding())
+def test_round_hypothesis(q, r):
     """Should round ``Quantity`` objects."""
+    getcontext().rounding = r
     assert q.round() == q.round().round()
+
+
+# Fails due to jeremyagray/sigcalc#23.
+# @given(quantities(), rounding())
+# def test_additive_identity_hypothesis(q, r):
+#     """``Quantity`` objects should have an additive identity."""
+#     getcontext().rounding = r
+#     id = Quantity("0", "1", True)
+#     assert q + id == q
+#     assert id + q == q
+#     assert id + q + id == q
+
+
+# Fails due to jeremyagray/sigcalc#23.
+# @given(quantities(), rounding())
+# def test_subtractive_identity_hypothesis(q, r):
+#     """``Quantity`` objects should have a subtractive identity."""
+#     getcontext().rounding = r
+#     id = Quantity("0", "1", True)
+#     assert q - id == q
+
+
+@given(quantities(), rounding())
+def test_multiplicative_identity_hypothesis(q, r):
+    """``Quantity`` objects should have a multiplicative identity."""
+    getcontext().rounding = r
+    id = Quantity("1", "1", True)
+    assert q * id == q
+    assert id * q == q
+    assert id * q * id == q
+
+
+@given(quantities(), rounding())
+def test_divisive_identity_hypothesis(q, r):
+    """``Quantity`` objects should have a divisive identity."""
+    getcontext().rounding = r
+    id = Quantity("1", "1", True)
+    assert q / id == q

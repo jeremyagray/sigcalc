@@ -88,35 +88,39 @@ significance have different meanings, they are not equal as quantity
 objects:
 
 >>> from sigcalc import Quantity
->>> from decimal import ROUND_HALF_EVEN
->>> from decimal import ROUND_HALF_DOWN
 >>> a = Quantity("3.135", "3")
->>> b = Quantity("3.135", "3", rounding=ROUND_HALF_EVEN)
->>> c = Quantity("3.135", "3", rounding=ROUND_HALF_DOWN)
->>> d = Quantity("3.145", "3")
->>> e = Quantity("3.135", "4")
+>>> b = Quantity("3.135", "4")
+>>> c = Quantity("3.145", "3")
 >>> a == a
 True
->>> a != b
-False
 >>> a == b
-True
->>> a != c
-True
->>> a < d
-True
->>> a <= d
-True
->>> a > d
 False
->>> d > a
+>>> a != b
 True
->>> d >= a
-True
->>> a != e
-True
->>> a == e
+>>> a < b
 False
+>>> a <= b
+False
+
+Rounding affects comparisons as well:
+
+>>> from decimal import ROUND_HALF_EVEN
+>>> from decimal import ROUND_HALF_UP
+>>> from decimal import getcontext
+>>> getcontext().rounding = ROUND_HALF_EVEN
+>>> a < c
+False
+>>> a == c
+True
+>>> a <= c
+True
+>>> getcontext().rounding = ROUND_HALF_UP
+>>> a < c
+True
+>>> a == c
+False
+>>> a <= c
+True
 
 Rounding and output are tied together.  Typically, rounding is
 unnecessary except for output but is available:
@@ -137,19 +141,28 @@ String output uses the underlying ``decimal`` module's string output
 after rounding to the correct significant figures:
 
 >>> from decimal import ROUND_HALF_EVEN
+>>> from decimal import ROUND_HALF_UP
+>>> from decimal import getcontext
 >>> a = Quantity("3.145", "3")
->>> b = Quantity("3.145", "3", rounding=ROUND_HALF_EVEN)
+>>> getcontext().rounding = ROUND_HALF_UP
 >>> str(a)
 '3.15'
->>> str(b)
+>>> getcontext().rounding = ROUND_HALF_EVEN
+>>> str(a)
 '3.14'
 
-The rounding mode should be one of the modes available in ``decimal``.
+The rounding mode is controlled by the ``decimal`` module contexts and
+context managers.  The default rounding mode for the ``decimal``
+module is ``decimal.ROUND_HALF_EVEN`` while the rounding used in most
+textbook discussions of significant figures is
+``decimal.ROUND_HALF_UP``, so beware.
 
 Likewise with formatting:
 
+>>> getcontext().rounding = ROUND_HALF_UP
 >>> format(a, ".2e")
 '3.15e+0'
+>>> getcontext().rounding = ROUND_HALF_EVEN
 >>> format(b, ".2e")
 '3.14e+0'
 

@@ -13,7 +13,6 @@
 """Quantity class for significant figure calculations."""
 
 import math
-from decimal import ROUND_HALF_UP
 from decimal import Decimal
 from decimal import getcontext
 
@@ -43,7 +42,7 @@ def _most_significant_place(num):
 class Quantity:
     """A quantity for significant figure calculations."""
 
-    def __init__(self, value, figures, constant=False, rounding=ROUND_HALF_UP):
+    def __init__(self, value, figures, constant=False):
         """Initialize a ``Quantity()``.
 
         Parameters
@@ -55,8 +54,6 @@ class Quantity:
             ``Decimal``.
         constant : boolean
             Set as constant (unlimited precision), or not.
-        rounding : str
-            Rounding mode selected from the modes in ``decimal``.
         """
         self.value = Decimal(str(value))
 
@@ -70,7 +67,6 @@ class Quantity:
         else:
             self.figures = getcontext().prec
         self._constant = constant
-        self.rounding = rounding
 
     # Output operations.
     def __repr__(self):
@@ -79,9 +75,6 @@ class Quantity:
 
         if self.constant:
             rep += f", constant={self.constant}"
-
-        if self.rounding != ROUND_HALF_UP:
-            rep += f", rounding={self.rounding}"
 
         return rep + ")"
 
@@ -106,15 +99,15 @@ class Quantity:
     # Unary operations.
     def __neg__(self):
         """Negate a ``Quantity()`` object."""
-        return Quantity(-self.value, self.figures, self.constant, self.rounding)
+        return Quantity(-self.value, self.figures, self.constant)
 
     def __pos__(self):
         """Return a ``Quantity()`` object."""
-        return Quantity(self.value, self.figures, self.constant, self.rounding)
+        return Quantity(self.value, self.figures, self.constant)
 
     def __abs__(self):
         """Calculate the magnitude of a ``Quantity()`` object."""
-        return Quantity(abs(self.value), self.figures, self.constant, self.rounding)
+        return Quantity(abs(self.value), self.figures, self.constant)
 
     # Comparisons.
     def __lt__(self, other):
@@ -237,7 +230,7 @@ class Quantity:
         """Round a ``Quantity`` object ``value`` to significant figures.
 
         Round a ``Quantity`` object ``value`` to significant figures
-        using the current rounding mode, returning a ``Decimal``.
+        using the context rounding mode, returning a ``Decimal``.
         Return ``self.value`` unrounded if ``self.constant`` is
         ``True``.
 
@@ -250,13 +243,13 @@ class Quantity:
             return self.value
 
         place = _most_significant_place(self.value) - self.figures + Decimal("1")
-        return self.value.quantize(Decimal(f"1e{place}"), rounding=self.rounding)
+        return self.value.quantize(Decimal(f"1e{place}"))
 
     def round(self):  # dead: disable
         """Round a ``Quantity`` object to significant figures.
 
         Round a ``Quantity`` object to significant figures using the
-        current rounding mode, returning a new ``Quantity`` with only
+        context rounding mode, returning a new ``Quantity`` with only
         the rounded significant figures.  Return a new ``Quantity``
         equal to ``self`` unrounded if ``self.constant`` is ``True``.
 
@@ -266,6 +259,6 @@ class Quantity:
             A new ``Quantity`` equal to the rounded ``self``.
         """
         if self.constant:
-            return Quantity(self.value, self.figures, self.constant, self.rounding)
+            return Quantity(self.value, self.figures, self.constant)
 
-        return Quantity(self._round(), self.figures, self.constant, self.rounding)
+        return Quantity(self._round(), self.figures, self.constant)

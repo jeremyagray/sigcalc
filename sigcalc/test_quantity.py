@@ -22,16 +22,25 @@ from decimal import ROUND_HALF_UP
 from decimal import ROUND_UP
 from decimal import Decimal
 from decimal import getcontext
+from decimal import localcontext
 
 import pytest
 
 from sigcalc import Quantity
 from sigcalc import _most_significant_place
 
+# Default values from ``decimal``.
+default_rounding = getcontext().rounding
+default_prec = getcontext().prec
+
 
 # Helper function tests.
 def test__most_significant_place():
     """Should return the power of the most significant place."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     assert _most_significant_place(Decimal("31415926540")) == Decimal("10")
     assert _most_significant_place(Decimal("3141592654")) == Decimal("9")
     assert _most_significant_place(Decimal("314159265.4")) == Decimal("8")
@@ -78,6 +87,10 @@ def test__most_significant_place():
 
 def test__most_significant_place_zero():
     """Should return zero as the most significant place for zero."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     assert _most_significant_place(Decimal("0")) == Decimal("0")
     assert _most_significant_place(Decimal("0.000")) == Decimal("0")
 
@@ -85,24 +98,22 @@ def test__most_significant_place_zero():
 # Output operations tests.
 def test___repr__():
     """Should reproduce a ``Quantity`` object."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     q = Quantity("3.14", "3")
     assert repr(q) == f'Quantity("{str(q.value)}", "{str(q.figures)}")'
     q = Quantity("3.14", "3", constant=True)
     assert repr(q) == f'Quantity("{str(q.value)}", "{str(q.figures)}", constant=True)'
-    q = Quantity("3.14", "3", rounding=ROUND_HALF_EVEN)
-    assert (
-        repr(q)
-        == f'Quantity("{str(q.value)}", "{str(q.figures)}", rounding=ROUND_HALF_EVEN)'
-    )
-    q = Quantity("3.14", "3", constant=True, rounding=ROUND_HALF_EVEN)
-    assert repr(q) == (
-        f'Quantity("{str(q.value)}", "{str(q.figures)}",'
-        f" constant=True, rounding=ROUND_HALF_EVEN)"
-    )
 
 
 def test___format__():
     """Should format a ``Quantity`` object."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # Big numbers.
     q = Quantity("314", "1")
     assert f"{q:.0f}" == "300"
@@ -127,145 +138,121 @@ def test___format__():
     assert f"{q:.3e}" == "3.140e-2"
 
 
-def test___str__():
+@pytest.mark.parametrize(
+    "mode, value, figures, output",
+    [
+        (ROUND_05UP, "31.4", "1", "3E+1"),
+        (ROUND_CEILING, "31.4", "1", "4E+1"),
+        (ROUND_DOWN, "31.4", "1", "3E+1"),
+        (ROUND_FLOOR, "31.4", "1", "3E+1"),
+        (ROUND_HALF_DOWN, "31.4", "1", "3E+1"),
+        (ROUND_HALF_EVEN, "31.4", "1", "3E+1"),
+        (ROUND_HALF_UP, "31.4", "1", "3E+1"),
+        (ROUND_UP, "31.4", "1", "4E+1"),
+        (ROUND_05UP, "31.4", "2", "31"),
+        (ROUND_CEILING, "31.4", "2", "32"),
+        (ROUND_DOWN, "31.4", "2", "31"),
+        (ROUND_FLOOR, "31.4", "2", "31"),
+        (ROUND_HALF_DOWN, "31.4", "2", "31"),
+        (ROUND_HALF_EVEN, "31.4", "2", "31"),
+        (ROUND_HALF_UP, "31.4", "2", "31"),
+        (ROUND_UP, "31.4", "2", "32"),
+        (ROUND_05UP, "3.14", "1", "3"),
+        (ROUND_CEILING, "3.14", "1", "4"),
+        (ROUND_DOWN, "3.14", "1", "3"),
+        (ROUND_FLOOR, "3.14", "1", "3"),
+        (ROUND_HALF_DOWN, "3.14", "1", "3"),
+        (ROUND_HALF_EVEN, "3.14", "1", "3"),
+        (ROUND_HALF_UP, "3.14", "1", "3"),
+        (ROUND_UP, "3.14", "1", "4"),
+        (ROUND_05UP, "3.14", "2", "3.1"),
+        (ROUND_CEILING, "3.14", "2", "3.2"),
+        (ROUND_DOWN, "3.14", "2", "3.1"),
+        (ROUND_FLOOR, "3.14", "2", "3.1"),
+        (ROUND_HALF_DOWN, "3.14", "2", "3.1"),
+        (ROUND_HALF_EVEN, "3.14", "2", "3.1"),
+        (ROUND_HALF_UP, "3.14", "2", "3.1"),
+        (ROUND_UP, "3.14", "2", "3.2"),
+        (ROUND_05UP, "3.14", "3", "3.14"),
+        (ROUND_CEILING, "3.14", "3", "3.14"),
+        (ROUND_DOWN, "3.14", "3", "3.14"),
+        (ROUND_FLOOR, "3.14", "3", "3.14"),
+        (ROUND_HALF_DOWN, "3.14", "3", "3.14"),
+        (ROUND_HALF_EVEN, "3.14", "3", "3.14"),
+        (ROUND_HALF_UP, "3.14", "3", "3.14"),
+        (ROUND_UP, "3.14", "3", "3.14"),
+        (ROUND_05UP, "3.14", "4", "3.140"),
+        (ROUND_CEILING, "3.14", "4", "3.140"),
+        (ROUND_DOWN, "3.14", "4", "3.140"),
+        (ROUND_FLOOR, "3.14", "4", "3.140"),
+        (ROUND_HALF_DOWN, "3.14", "4", "3.140"),
+        (ROUND_HALF_EVEN, "3.14", "4", "3.140"),
+        (ROUND_HALF_UP, "3.14", "4", "3.140"),
+        (ROUND_UP, "3.14", "4", "3.140"),
+        (ROUND_05UP, "3.145", "3", "3.14"),
+        (ROUND_CEILING, "3.145", "3", "3.15"),
+        (ROUND_DOWN, "3.145", "3", "3.14"),
+        (ROUND_FLOOR, "3.145", "3", "3.14"),
+        (ROUND_HALF_DOWN, "3.145", "3", "3.14"),
+        (ROUND_HALF_EVEN, "3.145", "3", "3.14"),
+        (ROUND_HALF_UP, "3.145", "3", "3.15"),
+        (ROUND_UP, "3.145", "3", "3.15"),
+        (ROUND_05UP, "3.135", "3", "3.13"),
+        (ROUND_CEILING, "3.135", "3", "3.14"),
+        (ROUND_DOWN, "3.135", "3", "3.13"),
+        (ROUND_FLOOR, "3.135", "3", "3.13"),
+        (ROUND_HALF_DOWN, "3.135", "3", "3.13"),
+        (ROUND_HALF_EVEN, "3.135", "3", "3.14"),
+        (ROUND_HALF_UP, "3.135", "3", "3.14"),
+        (ROUND_UP, "3.135", "3", "3.14"),
+        (ROUND_05UP, "-3.135", "3", "-3.13"),
+        (ROUND_CEILING, "-3.135", "3", "-3.13"),
+        (ROUND_DOWN, "-3.135", "3", "-3.13"),
+        (ROUND_FLOOR, "-3.135", "3", "-3.14"),
+        (ROUND_HALF_DOWN, "-3.135", "3", "-3.13"),
+        (ROUND_HALF_EVEN, "-3.135", "3", "-3.14"),
+        (ROUND_HALF_UP, "-3.135", "3", "-3.14"),
+        (ROUND_UP, "-3.135", "3", "-3.14"),
+        (ROUND_05UP, "3.101", "3", "3.11"),
+        (ROUND_05UP, "3.151", "3", "3.16"),
+        (ROUND_05UP, "-3.101", "3", "-3.11"),
+        (ROUND_05UP, "-3.151", "3", "-3.16"),
+    ],
+)
+def test___str__(mode, value, figures, output):
     """Should stringify a ``Quantity`` object."""
-    q = Quantity("3.14", "1", rounding=ROUND_HALF_UP)
-    assert str(q) == "3"
-    q = Quantity("3.14", "1", rounding=ROUND_HALF_DOWN)
-    assert str(q) == "3"
-    q = Quantity("3.14", "1", rounding=ROUND_HALF_EVEN)
-    assert str(q) == "3"
-    q = Quantity("3.14", "1", rounding=ROUND_CEILING)
-    assert str(q) == "4"
-    q = Quantity("3.14", "1", rounding=ROUND_FLOOR)
-    assert str(q) == "3"
-    q = Quantity("3.14", "1", rounding=ROUND_UP)
-    assert str(q) == "4"
-    q = Quantity("3.14", "1", rounding=ROUND_DOWN)
-    assert str(q) == "3"
-    q = Quantity("3.14", "1", rounding=ROUND_05UP)
-    assert str(q) == "3"
-
-    q = Quantity("3.14", "2", rounding=ROUND_HALF_UP)
-    assert str(q) == "3.1"
-    q = Quantity("3.14", "2", rounding=ROUND_HALF_DOWN)
-    assert str(q) == "3.1"
-    q = Quantity("3.14", "2", rounding=ROUND_HALF_EVEN)
-    assert str(q) == "3.1"
-    q = Quantity("3.14", "2", rounding=ROUND_CEILING)
-    assert str(q) == "3.2"
-    q = Quantity("3.14", "2", rounding=ROUND_FLOOR)
-    assert str(q) == "3.1"
-    q = Quantity("3.14", "2", rounding=ROUND_UP)
-    assert str(q) == "3.2"
-    q = Quantity("3.14", "2", rounding=ROUND_DOWN)
-    assert str(q) == "3.1"
-
-    q = Quantity("3.14", "3", rounding=ROUND_HALF_UP)
-    assert str(q) == "3.14"
-    q = Quantity("3.14", "3", rounding=ROUND_HALF_DOWN)
-    assert str(q) == "3.14"
-    q = Quantity("3.14", "3", rounding=ROUND_HALF_EVEN)
-    assert str(q) == "3.14"
-    q = Quantity("3.14", "3", rounding=ROUND_CEILING)
-    assert str(q) == "3.14"
-    q = Quantity("3.14", "3", rounding=ROUND_FLOOR)
-    assert str(q) == "3.14"
-    q = Quantity("3.14", "3", rounding=ROUND_UP)
-    assert str(q) == "3.14"
-    q = Quantity("3.14", "3", rounding=ROUND_DOWN)
-    assert str(q) == "3.14"
-    q = Quantity("3.14", "3", rounding=ROUND_05UP)
-    assert str(q) == "3.14"
-
-    q = Quantity("3.14", "4", rounding=ROUND_HALF_UP)
-    assert str(q) == "3.140"
-    q = Quantity("3.14", "4", rounding=ROUND_HALF_DOWN)
-    assert str(q) == "3.140"
-    q = Quantity("3.14", "4", rounding=ROUND_HALF_EVEN)
-    assert str(q) == "3.140"
-    q = Quantity("3.14", "4", rounding=ROUND_CEILING)
-    assert str(q) == "3.140"
-    q = Quantity("3.14", "4", rounding=ROUND_FLOOR)
-    assert str(q) == "3.140"
-    q = Quantity("3.14", "4", rounding=ROUND_UP)
-    assert str(q) == "3.140"
-    q = Quantity("3.14", "4", rounding=ROUND_DOWN)
-    assert str(q) == "3.140"
-    q = Quantity("3.14", "4", rounding=ROUND_05UP)
-    assert str(q) == "3.140"
-
-    q = Quantity("3.145", "3", rounding=ROUND_HALF_UP)
-    assert str(q) == "3.15"
-    q = Quantity("3.145", "3", rounding=ROUND_HALF_DOWN)
-    assert str(q) == "3.14"
-    q = Quantity("3.145", "3", rounding=ROUND_HALF_EVEN)
-    assert str(q) == "3.14"
-    q = Quantity("3.145", "3", rounding=ROUND_CEILING)
-    assert str(q) == "3.15"
-    q = Quantity("3.145", "3", rounding=ROUND_FLOOR)
-    assert str(q) == "3.14"
-    q = Quantity("3.145", "3", rounding=ROUND_UP)
-    assert str(q) == "3.15"
-    q = Quantity("3.145", "3", rounding=ROUND_DOWN)
-    assert str(q) == "3.14"
-    q = Quantity("3.145", "3", rounding=ROUND_05UP)
-    assert str(q) == "3.14"
-
-    q = Quantity("3.135", "3", rounding=ROUND_HALF_UP)
-    assert str(q) == "3.14"
-    q = Quantity("3.135", "3", rounding=ROUND_HALF_DOWN)
-    assert str(q) == "3.13"
-    q = Quantity("3.135", "3", rounding=ROUND_HALF_EVEN)
-    assert str(q) == "3.14"
-    q = Quantity("3.135", "3", rounding=ROUND_CEILING)
-    assert str(q) == "3.14"
-    q = Quantity("3.135", "3", rounding=ROUND_FLOOR)
-    assert str(q) == "3.13"
-    q = Quantity("3.135", "3", rounding=ROUND_UP)
-    assert str(q) == "3.14"
-    q = Quantity("3.135", "3", rounding=ROUND_DOWN)
-    assert str(q) == "3.13"
-    q = Quantity("3.135", "3", rounding=ROUND_05UP)
-    assert str(q) == "3.13"
-
-    q = Quantity("-3.135", "3", rounding=ROUND_HALF_UP)
-    assert str(q) == "-3.14"
-    q = Quantity("-3.135", "3", rounding=ROUND_HALF_DOWN)
-    assert str(q) == "-3.13"
-    q = Quantity("-3.135", "3", rounding=ROUND_HALF_EVEN)
-    assert str(q) == "-3.14"
-    q = Quantity("-3.135", "3", rounding=ROUND_CEILING)
-    assert str(q) == "-3.13"
-    q = Quantity("-3.135", "3", rounding=ROUND_FLOOR)
-    assert str(q) == "-3.14"
-    q = Quantity("-3.135", "3", rounding=ROUND_UP)
-    assert str(q) == "-3.14"
-    q = Quantity("-3.135", "3", rounding=ROUND_DOWN)
-    assert str(q) == "-3.13"
-    q = Quantity("-3.135", "3", rounding=ROUND_05UP)
-    assert str(q) == "-3.13"
-
-    q = Quantity("3.101", "3", rounding=ROUND_05UP)
-    assert str(q) == "3.11"
-    q = Quantity("3.151", "3", rounding=ROUND_05UP)
-    assert str(q) == "3.16"
+    # Test in a local context since the rounding modes are changing.
+    with localcontext() as ctx:
+        ctx.rounding = mode
+        assert str(Quantity(value, figures)) == output
 
 
 def test__round_constants():
     """Constants should not round."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     q = Quantity("3.14", "2", constant=True)
     assert q._round() == Decimal("3.14")
 
 
 def test_round_constants():
     """Constants should not round."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     q = Quantity("3.14", "2", constant=True)
     assert q.round() == q
 
 
 def test_round():
     """Should round a ``Quantity`` object."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     q = Quantity("3.14", "2")
     assert q.round() == Quantity("3.1", "2")
 
@@ -273,6 +260,10 @@ def test_round():
 # Unary operations tests.
 def test_abs():
     """Should return the absolute value of a ``Quantity`` object."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     assert abs(Quantity("3.14", "3")) == Quantity("3.14", "3")
     assert abs(Quantity("-3.14", "3")) == Quantity("3.14", "3")
     assert abs(Quantity("+3.14", "3")) == Quantity("3.14", "3")
@@ -287,6 +278,10 @@ def test_abs():
 
 def test_neg():
     """Should return the negation of a ``Quantity`` object."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     assert -Quantity("3.14", "3") == Quantity("-3.14", "3")
     assert -Quantity("-3.14", "3") == Quantity("3.14", "3")
     assert -Quantity("+3.14", "3") == Quantity("-3.14", "3")
@@ -301,6 +296,10 @@ def test_neg():
 
 def test_pos():
     """Should return the positive of a ``Quantity`` object."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     assert +Quantity("3.14", "3") == Quantity("3.14", "3")
     assert +Quantity("-3.14", "3") == Quantity("-3.14", "3")
     assert +Quantity("+3.14", "3") == Quantity("3.14", "3")
@@ -314,16 +313,16 @@ def test_pos():
 # Comparisons tests.
 def test___lt__():
     """Lesser ``Quantity`` objects should be ordered correctly."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # Lesser value.
     assert Quantity("3.14", "3") < Quantity("3.15", "3")
     # Significance is irrelevant.
     assert Quantity("3.14", "3") < Quantity("3.15", "5")
     assert Quantity("3.14", "5") < Quantity("3.15", "3")
     assert Quantity("3.14", "5") < Quantity("3.15", "3", constant=True)
-    # Check after rounding.
-    assert Quantity("3.135", "3", rounding=ROUND_HALF_DOWN) < Quantity(
-        "3.135", "3", rounding=ROUND_HALF_EVEN
-    )
 
     # Greater value.
     assert not Quantity("3.15", "3") < Quantity("3.14", "3")
@@ -331,46 +330,42 @@ def test___lt__():
     assert not Quantity("3.15", "3") < Quantity("3.14", "5")
     assert not Quantity("3.15", "5") < Quantity("3.14", "3")
     assert not Quantity("3.15", "5") < Quantity("3.14", "3", constant=True)
-    # Check after rounding.
-    assert not Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) < Quantity(
-        "3.135", "3", rounding=ROUND_HALF_DOWN
-    )
 
 
 def test___le__():
     """Less than or equal ``Quantity`` objects should be ordered correctly."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # Lesser value.
     assert Quantity("3.14", "3") <= Quantity("3.15", "3")
     # Significance is irrelevant.
     assert Quantity("3.14", "3") <= Quantity("3.15", "5")
     assert Quantity("3.14", "5") <= Quantity("3.15", "3")
     assert Quantity("3.14", "5") <= Quantity("3.15", "3", constant=True)
-    # Check after rounding.
-    assert Quantity("3.135", "3", rounding=ROUND_HALF_DOWN) <= Quantity(
-        "3.135", "3", rounding=ROUND_HALF_EVEN
-    )
     # Equal values.
     assert Quantity("3.14", "3") <= Quantity("3.14", "3")
     assert Quantity("3.140", "3") <= Quantity("3.14", "3")
     assert Quantity("3.14", "3") <= Quantity("3.140", "3")
     # Equal values after rounding.
-    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) <= Quantity(
-        "3.145", "3", rounding=ROUND_HALF_DOWN
-    )
+    assert Quantity("3.137", "3") <= Quantity("3.136", "3")
     # Constants.
     assert Quantity("3.14", "3", constant=True) <= Quantity("3.14", "5", constant=True)
 
 
 def test___eq__():
     """Equal ``Quantity`` objects should be equal."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # Equal values.
     assert Quantity("3.14", "3") == Quantity("3.14", "3")
     assert Quantity("3.140", "3") == Quantity("3.14", "3")
     assert Quantity("3.14", "3") == Quantity("3.140", "3")
     # Equal values after rounding.
-    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) == Quantity(
-        "3.145", "3", rounding=ROUND_HALF_DOWN
-    )
+    assert Quantity("3.138", "3") == Quantity("3.141", "3")
     # Constants.
     assert Quantity("3.14", "3", constant=True) == Quantity("3.14", "5", constant=True)
     assert Quantity("3.14", getcontext().prec) == Quantity("3.14", "5", constant=True)
@@ -378,6 +373,10 @@ def test___eq__():
 
 def test___ne__():
     """Unequal ``Quantity`` objects should not be equal."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # Different significance.
     assert Quantity("3.14", "3") != Quantity("3.14", "2")
     assert Quantity("3.14", "3") != Quantity("3.14", "4")
@@ -388,10 +387,6 @@ def test___ne__():
     assert Quantity("3.14", "3") != Quantity("3.13", "2")
     assert Quantity("3.14", "3") != Quantity("3.13", "3")
     assert Quantity("3.14", "3") != Quantity("3.13", "4")
-    # Unequal values after rounding.
-    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) != Quantity(
-        "3.135", "3", rounding=ROUND_HALF_DOWN
-    )
     # Constants.
     assert Quantity("3.14", "3", constant=True) != Quantity("3.14", "3")
     assert Quantity("3.14", "3") != Quantity("3.14", "3", constant=True)
@@ -399,38 +394,36 @@ def test___ne__():
 
 def test___gt__():
     """Greater ``Quantity`` objects should be greater."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # Greater value.
     assert Quantity("3.15", "3") > Quantity("3.14", "3")
     # Significance is irrelevant.
     assert Quantity("3.15", "3") > Quantity("3.14", "5")
     assert Quantity("3.15", "5") > Quantity("3.14", "3")
     assert Quantity("3.15", "5") > Quantity("3.14", "3", constant=True)
-    # Check after rounding.
-    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) > Quantity(
-        "3.135", "3", rounding=ROUND_HALF_DOWN
-    )
 
 
 def test___ge__():
     """Greater than or equal ``Quantity`` objects should be ordered correctly."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # Greater value.
     assert Quantity("3.15", "3") >= Quantity("3.14", "3")
     # Significance is irrelevant.
     assert Quantity("3.15", "3") >= Quantity("3.14", "5")
     assert Quantity("3.15", "5") >= Quantity("3.14", "3")
     assert Quantity("3.15", "5") >= Quantity("3.14", "3", constant=True)
-    # Check after rounding.
-    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) >= Quantity(
-        "3.135", "3", rounding=ROUND_HALF_DOWN
-    )
     # Equal values.
     assert Quantity("3.14", "3") >= Quantity("3.14", "3")
     assert Quantity("3.140", "3") >= Quantity("3.14", "3")
     assert Quantity("3.14", "3") >= Quantity("3.140", "3")
     # Equal values after rounding.
-    assert Quantity("3.135", "3", rounding=ROUND_HALF_EVEN) >= Quantity(
-        "3.145", "3", rounding=ROUND_HALF_DOWN
-    )
+    assert Quantity("3.136", "3") >= Quantity("3.137", "3")
     # Constants.
     assert Quantity("3.14", "3", constant=True) >= Quantity("3.14", "5", constant=True)
 
@@ -438,6 +431,10 @@ def test___ge__():
 # Arithmetic operations tests.
 def test_add():
     """Quantities should add."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     assert Quantity("3.14", "3") + Quantity("2.72", "3") == Quantity("5.86", "3")
     assert Quantity("3.14", "3") + Quantity("0.272", "3") == Quantity("3.412", "3")
     assert Quantity("100", "1") + Quantity("0.001", "1") == Quantity("100.001", "1")
@@ -462,6 +459,10 @@ def test_add():
 
 def test_add_bad_types():
     """Only quantities should add."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     with pytest.raises(TypeError):
         Quantity("3.14", "3") + 3
     with pytest.raises(TypeError):
@@ -470,6 +471,10 @@ def test_add_bad_types():
 
 def test_sub():
     """Quantities should subtract."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # Easy.
     assert Quantity("3.14", "3") - Quantity("1.72", "3") == Quantity("1.42", "3")
     # Loss of precision.
@@ -509,6 +514,10 @@ def test_sub():
 
 def test_sub_bad_types():
     """Only quantities should subtract."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     with pytest.raises(TypeError):
         Quantity("3.14", "3") - 3
     with pytest.raises(TypeError):
@@ -517,6 +526,10 @@ def test_sub_bad_types():
 
 def test_mult():
     """Quantities should multiply."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # 3.14 * 2.72 = 8.5408
     assert Quantity("3.14", "3") * Quantity("2.72", "3") == Quantity("8.5408", "3")
     assert Quantity("3.14", "3") * Quantity("0.272", "3") == Quantity("0.85408", "3")
@@ -540,6 +553,10 @@ def test_mult():
 
 def test_mul_bad_types():
     """Only quantities should multiply."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     with pytest.raises(TypeError):
         Quantity("3.14", "3") * 3
     with pytest.raises(TypeError):
@@ -548,6 +565,10 @@ def test_mul_bad_types():
 
 def test_div():
     """Quantities should divide."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # 8.5408 / 2.72 = 3.14
     assert Quantity("8.5408", "3") / Quantity("2.72", "3") == Quantity("3.14", "3")
     assert Quantity("8.5408", "3") / Quantity("0.272", "3") == Quantity("31.4", "3")
@@ -576,6 +597,10 @@ def test_div():
 
 def test_div_bad_types():
     """Only quantities should divide."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     with pytest.raises(TypeError):
         Quantity("3.14", "3") / 3
     with pytest.raises(TypeError):
@@ -584,6 +609,10 @@ def test_div_bad_types():
 
 def test_textbook_examples():
     """Should corroborate answers to textbook problems."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     # holt:chemistry2006
     # Sample Problem A and Practice, p. 59.
     # Note that source has a mistake due to rounding before the end of
@@ -610,6 +639,10 @@ def test_textbook_examples():
 
 def test_constant():
     """Constant ``Quantity`` objects should return ``True``."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     q = Quantity("3.14", "3")
     assert q.constant is False
     q = Quantity("3.14", "3", constant=False)
@@ -620,6 +653,10 @@ def test_constant():
 
 def test_modify_constant():
     """Should create and return constant ``Quantity`` objects."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     q = Quantity("3.14", "3")
     q.constant = True
     assert q.constant is True
@@ -631,6 +668,10 @@ def test_modify_constant():
 
 def test_create_constant_idempotent():
     """Should create and return constant ``Quantity`` objects."""
+    # Set default precision and rounding.
+    getcontext().prec = default_prec
+    getcontext().rounding = default_rounding
+
     q = Quantity("3.14", "3")
     q.constant = True
     q.constant = True
