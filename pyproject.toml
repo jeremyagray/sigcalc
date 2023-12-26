@@ -99,9 +99,9 @@ required_footers = [
 authors = [
   "Jeremy A Gray <gray@flyquackswim.com>",
 ]
-description = "vocabulary utilities for education"
+description = "significant figures calculations"
 name = "sigcalc"
-version = "0.0.1"
+version = "0.1.0"
 license = "GPL-3.0-or-later"
 maintainers = [
   "Jeremy A Gray <gray@flyquackswim.com>",
@@ -111,7 +111,7 @@ homepage = "https://github.com/jeremyagray/sigcalc"
 repository = "https://github.com/jeremyagray/sigcalc"
 
 classifiers = [
-  "Development Status :: 1 - Planning",
+  "Development Status :: 2 - Pre-Alpha",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
