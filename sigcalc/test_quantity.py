@@ -30,8 +30,8 @@ from sigcalc import Quantity
 from sigcalc import _most_significant_place
 
 # Default values from ``decimal``.
-default_rounding = getcontext().rounding
-default_prec = getcontext().prec
+default_rounding = ROUND_HALF_EVEN
+default_prec = 28
 
 
 # Helper function tests.
@@ -40,6 +40,11 @@ def test__most_significant_place():
     # Set default precision and rounding.
     getcontext().prec = default_prec
     getcontext().rounding = default_rounding
+
+    assert _most_significant_place(Decimal("0")) == Decimal("0")
+    assert _most_significant_place(Decimal("0.5")) == Decimal("-1")
+    assert _most_significant_place(Decimal("1")) == Decimal("0")
+    assert _most_significant_place(Decimal("10")) == Decimal("1")
 
     assert _most_significant_place(Decimal("31415926540")) == Decimal("10")
     assert _most_significant_place(Decimal("3141592654")) == Decimal("9")
@@ -490,7 +495,7 @@ def test_sub():
     assert Quantity("100", "1") - Quantity("0.001", "1") == Quantity("99.999", "1")
     assert Quantity("100", "1") - Quantity("0.005", "1") == Quantity("99.995", "1")
     assert Quantity("100", "1") - Quantity("0.006", "1") == Quantity("99.994", "1")
-    assert Quantity("100.0", "4") - Quantity("0.001", "1") == Quantity("99.999", "4")
+    assert Quantity("100.0", "4") - Quantity("0.001", "1") == Quantity("99.999", "3")
     # Constants.
     assert Quantity("3.1415", "5") - Quantity("1.12", "3", constant=True) == Quantity(
         "2.0215", "5"

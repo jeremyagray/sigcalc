@@ -74,6 +74,12 @@ Quantity("-3.14", "3")
 >>> +a
 Quantity("3.14", "3")
 
+Beware that rounding is not performed during calculations and that
+reported significant figures for calculated values are for the
+unrounded value.  For example, a claculation that resulted in a result
+of ``Quantity("99.9", "3")`` could round to ``Quantity("100.0",
+"4")``, depending on the current rounding mode.
+
 Note that ``__floordiv__`` is not implemented as it is not useful for
 significant figures calculations.
 

@@ -23,6 +23,7 @@ from decimal import ROUND_UP
 from decimal import Decimal
 from decimal import getcontext
 
+from hypothesis import assume
 from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
@@ -74,7 +75,21 @@ def test_equality_hypothesis(q, r):
     """Should order ``Quantity`` objects."""
     getcontext().rounding = r
     assert q == q
+    assert q <= q
+    assert q >= q
     assert not q != q
+
+
+@given(quantities(), rounding())
+def test_ordering_hypothesis(q, r):
+    """Should order ``Quantity`` objects."""
+    # Zeroes satisfy equality.
+    assume(q.value != 0)
+    getcontext().rounding = r
+    assert q + abs(q) > q
+    assert q > q - abs(q)
+    assert q < q + abs(q)
+    assert q - abs(q) < q
 
 
 @given(quantities(), rounding())
@@ -122,24 +137,31 @@ def test_round_hypothesis(q, r):
     assert q.round() == q.round().round()
 
 
-# Fails due to jeremyagray/sigcalc#23.
-# @given(quantities(), rounding())
-# def test_additive_identity_hypothesis(q, r):
-#     """``Quantity`` objects should have an additive identity."""
-#     getcontext().rounding = r
-#     id = Quantity("0", "1", True)
-#     assert q + id == q
-#     assert id + q == q
-#     assert id + q + id == q
+@given(quantities(), rounding())
+def test_additive_identity_hypothesis(q, r):
+    """``Quantity`` objects should have an additive identity."""
+    getcontext().rounding = r
+    id = Quantity("0", "1", True)
+    assert q + id == q
+    assert id + q == q
+    assert id + q + id == q
 
 
-# Fails due to jeremyagray/sigcalc#23.
-# @given(quantities(), rounding())
-# def test_subtractive_identity_hypothesis(q, r):
-#     """``Quantity`` objects should have a subtractive identity."""
-#     getcontext().rounding = r
-#     id = Quantity("0", "1", True)
-#     assert q - id == q
+@given(quantities(), rounding())
+def test_subtractive_identity_hypothesis(q, r):
+    """``Quantity`` objects should have a subtractive identity."""
+    getcontext().rounding = r
+    id = Quantity("0", "1", True)
+    assert q - id == q
+
+
+@given(quantities(), rounding())
+def test_additive_inverse_hypothesis(q, r):
+    """``Quantity`` objects should have an additive inverse."""
+    getcontext().rounding = r
+    # assert q - q == Quantity("0", q.figures, q.constant)
+    assert q + q - q == q
+    assert q - q + q == q
 
 
 @given(quantities(), rounding())
@@ -151,6 +173,11 @@ def test_multiplicative_identity_hypothesis(q, r):
     assert id * q == q
     assert id * q * id == q
 
+    id = Quantity("1", q.figures)
+    assert q * id == q
+    assert id * q == q
+    assert id * q * id == q
+
 
 @given(quantities(), rounding())
 def test_divisive_identity_hypothesis(q, r):
@@ -158,3 +185,14 @@ def test_divisive_identity_hypothesis(q, r):
     getcontext().rounding = r
     id = Quantity("1", "1", True)
     assert q / id == q
+
+    id = Quantity("1", q.figures)
+    assert q / id == q
+
+
+@given(quantities(), rounding(), st.booleans())
+def test_constant_setter_hypothesis(q, r, c):
+    """Should set the ``constant`` attribute."""
+    getcontext().rounding = r
+    q.constant = c
+    assert q.constant is c

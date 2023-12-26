@@ -142,7 +142,7 @@ class Quantity:
 
     def __ge__(self, other):
         """Determine the ordering of two ``Quantity()`` objects."""
-        return not self.__lt__(other)
+        return not self.__lt__(other) or self.__eq__(other)
 
     # Arithmetic operations.
     def __add__(self, other):
@@ -162,12 +162,9 @@ class Quantity:
                     _most_significant_place(other.value) - other.figures + 1,
                 )
 
-            most = max(
-                _most_significant_place(value),
-                _most_significant_place(value.quantize(Decimal(f"1e{least}"))),
-            )
+            most = _most_significant_place(value)
 
-            return Quantity(value, most - least + 1)
+            return Quantity(value, max(most - least + 1, 1))
 
         return NotImplemented
 
