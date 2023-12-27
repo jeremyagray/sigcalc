@@ -196,3 +196,18 @@ def test_constant_setter_hypothesis(q, r, c):
     getcontext().rounding = r
     q.constant = c
     assert q.constant is c
+
+
+# Exponential function tests.
+@given(quantities(), rounding())
+def test_exp_hypothesis(q, r):
+    """Should calculate the exponential of ``Quantity`` objects."""
+    # Avoid decimal overflow.
+    assume(q.value < Decimal("2302586"))
+
+    getcontext().rounding = r
+    e = q.exp()
+
+    assert q.value.exp() == e.value
+    assert q.figures == e.figures
+    assert q.constant == e.constant

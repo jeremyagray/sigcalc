@@ -236,3 +236,29 @@ class Quantity:
             return Quantity(self.value, self.figures, self.constant)
 
         return Quantity(self._round(), self.figures, self.constant)
+
+    # Exponential functions.
+
+    def exp(self):
+        """Calculate the base e exponential of a ``Quantity``.
+
+        Uses the ``exp()`` function from ``decimal.Decimal()`` for the
+        exponential calculation and computes the significant figures
+        from the significant figures of the input ``Quantity``.
+
+        >>> from sigcalc import Quantity
+        >>> a = Quantity("1", "3")
+        >>> b = Quantity("0", "3")
+        >>> a.exp()
+        Quantity("2.718281828459045235360287471", "3")
+        >>> b.exp()
+        Quantity("1", "3")
+
+        Returns
+        -------
+        Quantity
+            A new ``Quantity`` with the computed exponential and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        return Quantity(self.value.exp(), self.figures, self.constant)
