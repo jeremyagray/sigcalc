@@ -12,31 +12,8 @@
 
 """Quantity class for significant figure calculations."""
 
-import math
 from decimal import Decimal
 from decimal import getcontext
-
-
-def _most_significant_place(num):
-    """Find the most significant place of a number.
-
-    Find the most significant place of a number and return it as the
-    exponent for a power of ten corresponding to the place value.
-
-    Parameters
-    ----------
-    num : Decimal
-        The number whose most significant place is needed.
-
-    Returns
-    -------
-    Decimal
-        The exponent of the most significant place.
-    """
-    if num == Decimal("0"):
-        return Decimal("0")
-
-    return Decimal(math.floor(math.log10(abs(num))))
 
 
 class Quantity:
@@ -153,16 +130,16 @@ class Quantity:
             if self.constant and other.constant:
                 return Quantity(value, getcontext().prec, constant=True)
             elif self.constant and not other.constant:
-                least = _most_significant_place(other.value) - other.figures + 1
+                least = other.value.adjusted() - other.figures + 1
             elif other.constant and not self.constant:
-                least = _most_significant_place(self.value) - self.figures + 1
+                least = self.value.adjusted() - self.figures + 1
             else:
                 least = max(
-                    _most_significant_place(self.value) - self.figures + 1,
-                    _most_significant_place(other.value) - other.figures + 1,
+                    self.value.adjusted() - self.figures + 1,
+                    other.value.adjusted() - other.figures + 1,
                 )
 
-            most = _most_significant_place(value)
+            most = value.adjusted()
 
             return Quantity(value, max(most - least + 1, 1))
 
@@ -239,7 +216,7 @@ class Quantity:
         if self.constant:
             return self.value
 
-        place = _most_significant_place(self.value) - self.figures + Decimal("1")
+        place = self.value.adjusted() - self.figures + Decimal("1")
         return self.value.quantize(Decimal(f"1e{place}"))
 
     def round(self):  # dead: disable

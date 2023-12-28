@@ -27,77 +27,10 @@ from decimal import localcontext
 import pytest
 
 from sigcalc import Quantity
-from sigcalc import _most_significant_place
 
 # Default values from ``decimal``.
 default_rounding = ROUND_HALF_EVEN
 default_prec = 28
-
-
-# Helper function tests.
-def test__most_significant_place():
-    """Should return the power of the most significant place."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
-    assert _most_significant_place(Decimal("0")) == Decimal("0")
-    assert _most_significant_place(Decimal("0.5")) == Decimal("-1")
-    assert _most_significant_place(Decimal("1")) == Decimal("0")
-    assert _most_significant_place(Decimal("10")) == Decimal("1")
-
-    assert _most_significant_place(Decimal("31415926540")) == Decimal("10")
-    assert _most_significant_place(Decimal("3141592654")) == Decimal("9")
-    assert _most_significant_place(Decimal("314159265.4")) == Decimal("8")
-    assert _most_significant_place(Decimal("31415926.54")) == Decimal("7")
-    assert _most_significant_place(Decimal("3141592.654")) == Decimal("6")
-    assert _most_significant_place(Decimal("314159.2654")) == Decimal("5")
-    assert _most_significant_place(Decimal("31415.92654")) == Decimal("4")
-    assert _most_significant_place(Decimal("3141.592654")) == Decimal("3")
-    assert _most_significant_place(Decimal("314.1592654")) == Decimal("2")
-    assert _most_significant_place(Decimal("31.41592654")) == Decimal("1")
-    assert _most_significant_place(Decimal("3.141592654")) == Decimal("0")
-    assert _most_significant_place(Decimal("0.3141592654")) == Decimal("-1")
-    assert _most_significant_place(Decimal("0.03141592654")) == Decimal("-2")
-    assert _most_significant_place(Decimal("0.003141592654")) == Decimal("-3")
-    assert _most_significant_place(Decimal("0.0003141592654")) == Decimal("-4")
-    assert _most_significant_place(Decimal("0.00003141592654")) == Decimal("-5")
-    assert _most_significant_place(Decimal("0.000003141592654")) == Decimal("-6")
-    assert _most_significant_place(Decimal("0.0000003141592654")) == Decimal("-7")
-    assert _most_significant_place(Decimal("0.00000003141592654")) == Decimal("-8")
-    assert _most_significant_place(Decimal("0.000000003141592654")) == Decimal("-9")
-    assert _most_significant_place(Decimal("0.0000000003141592654")) == Decimal("-10")
-    assert _most_significant_place(Decimal("-31415926540")) == Decimal("10")
-    assert _most_significant_place(Decimal("-3141592654")) == Decimal("9")
-    assert _most_significant_place(Decimal("-314159265.4")) == Decimal("8")
-    assert _most_significant_place(Decimal("-31415926.54")) == Decimal("7")
-    assert _most_significant_place(Decimal("-3141592.654")) == Decimal("6")
-    assert _most_significant_place(Decimal("-314159.2654")) == Decimal("5")
-    assert _most_significant_place(Decimal("-31415.92654")) == Decimal("4")
-    assert _most_significant_place(Decimal("-3141.592654")) == Decimal("3")
-    assert _most_significant_place(Decimal("-314.1592654")) == Decimal("2")
-    assert _most_significant_place(Decimal("-31.41592654")) == Decimal("1")
-    assert _most_significant_place(Decimal("-3.141592654")) == Decimal("0")
-    assert _most_significant_place(Decimal("-0.3141592654")) == Decimal("-1")
-    assert _most_significant_place(Decimal("-0.03141592654")) == Decimal("-2")
-    assert _most_significant_place(Decimal("-0.003141592654")) == Decimal("-3")
-    assert _most_significant_place(Decimal("-0.0003141592654")) == Decimal("-4")
-    assert _most_significant_place(Decimal("-0.00003141592654")) == Decimal("-5")
-    assert _most_significant_place(Decimal("-0.000003141592654")) == Decimal("-6")
-    assert _most_significant_place(Decimal("-0.0000003141592654")) == Decimal("-7")
-    assert _most_significant_place(Decimal("-0.00000003141592654")) == Decimal("-8")
-    assert _most_significant_place(Decimal("-0.000000003141592654")) == Decimal("-9")
-    assert _most_significant_place(Decimal("-0.0000000003141592654")) == Decimal("-10")
-
-
-def test__most_significant_place_zero():
-    """Should return zero as the most significant place for zero."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
-    assert _most_significant_place(Decimal("0")) == Decimal("0")
-    assert _most_significant_place(Decimal("0.000")) == Decimal("0")
 
 
 # Output operations tests.
