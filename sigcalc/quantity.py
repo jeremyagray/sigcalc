@@ -15,6 +15,8 @@
 from decimal import Decimal
 from decimal import getcontext
 
+import mpmath
+
 
 class Quantity:
     """A quantity for significant figure calculations."""
@@ -373,13 +375,85 @@ class Quantity:
 
     # Trigonometric functions and inverses.
 
-    def sin(self):  # dead: disable
-        """Calculate the sine of a ``Quantity``."""
-        return NotImplemented
+    def sin(self):
+        """Calculate the sine of a ``Quantity``.
 
-    def asin(self):  # dead: disable
-        """Calculate the inverse sine of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.sin()`` to calculate the sine and computes the
+        significant figures from the significant figures of the input
+        ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import Decimal
+        >>> pi = Decimal("3.1415926535897932384626433832795028841971")
+        >>> a = Quantity("0", "3")
+        >>> b = Quantity(pi / Decimal("2"), "3")
+        >>> c = Quantity(pi, "3")
+        >>> d = Quantity(Decimal("3") * pi / Decimal("2"), "3")
+        >>> e = Quantity(Decimal("2") * pi, "3")
+        >>> a.sin()
+        Quantity("0.0", "3")
+        >>> b.sin()
+        Quantity("1.0", "3")
+        >>> c.sin()
+        Quantity("6.929002854045868843477309453889805457857E-41", "3")
+        >>> d.sin()
+        Quantity("-1.0", "3")
+        >>> e.sin()
+        Quantity("-1.3858005708091737686954618907779610915714E-40", "3")
+
+        Returns
+        -------
+        Quantity
+            A new ``Quantity`` with the computed sine and significant
+            figures and constant value from the input ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.sin(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def asin(self):
+        """Calculate the inverse sine of a ``Quantity``.
+
+        Uses ``mpmath.asin()`` to calculate the sine and computes the
+        significant figures from the significant figures of the input
+        ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import Decimal
+        >>> pi = Decimal("3.1415926535897932384626433832795028841971")
+        >>> a = Quantity("0", "3")
+        >>> b = Quantity("1", "3")
+        >>> c = Quantity("-1", "3")
+        >>> a.asin()
+        Quantity("0.0", "3")
+        >>> b.asin()
+        Quantity("1.570796326794896619231321692", "3")
+        >>> c.asin()
+        Quantity("-1.570796326794896619231321692", "3")
+
+        Returns
+        -------
+        Quantity
+            A new ``Quantity`` with the computed sine and significant
+            figures and constant value from the input ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.asin(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
     def cos(self):  # dead: disable
         """Calculate the cosine of a ``Quantity``."""

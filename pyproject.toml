@@ -127,6 +127,7 @@ packages = [
 [tool.poetry.dependencies]
 
 python = ">=3.10.1,<4.0"
+mpmath = "^1"
 
 [tool.poetry.group.dev.dependencies]
 
