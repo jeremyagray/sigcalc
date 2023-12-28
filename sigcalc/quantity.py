@@ -281,8 +281,192 @@ class Quantity:
         Returns
         -------
         Quantity
-            A new ``Quantity`` with the computed exponential and
+            A new ``Quantity`` with the computed square root and
             significant figures and constant value from the input
             ``Quantity``.
         """
         return Quantity(self.value.sqrt(), self.figures, self.constant)
+
+    # Logarithmic functions.
+
+    def ln(self):
+        """Calculate the natural logarithm of a ``Quantity``.
+
+        Uses the ``ln()`` function from ``decimal.Decimal`` for the
+        natural logarithm calculation and computes the significant
+        figures from the significant figures of the input
+        ``Quantity``.
+
+        >>> from sigcalc import Quantity
+        >>> a = Quantity("2", "3")
+        >>> b = Quantity("3", "3")
+        >>> a.ln()
+        Quantity("0.6931471805599453094172321215", "3")
+        >>> b.ln()
+        Quantity("1.098612288668109691395245237", "4")
+
+        Beware the usual problems with computing logarithms, as raised
+        by the ``decimal`` module.  Precision is gained if the
+        absolute value of the result is greater than or equal to one
+        since the significant figures of the input determine the
+        significant decimal places of the output.
+
+        Returns
+        -------
+        Quantity
+            A new ``Quantity`` with the computed natural logarithm,
+            computed significant figures from the input and the size
+            of the computed logarithm, and constant value from the
+            input ``Quantity``.
+        """
+        x = Quantity(self.value.ln(), self.figures, self.constant)
+
+        if abs(x.value) < 1:
+            # Significant figures is only the mantissa.
+            pass
+        else:
+            # Significant figures includes the abscissa digits as well.
+            x.figures += x.value.adjusted() + 1
+
+        return x
+
+    def log10(self):
+        """Calculate the base 10 logarithm of a ``Quantity``.
+
+        Uses the ``log10()`` function from ``decimal.Decimal`` for the
+        base 10 logarithm calculation and computes the significant
+        figures from the significant figures of the input
+        ``Quantity``.
+
+        >>> from sigcalc import Quantity
+        >>> a = Quantity("100", "3")
+        >>> a.log10()
+        Quantity("2", "4")
+        >>> b = Quantity("0.5", "3")
+        >>> b.log10()
+        Quantity("-0.3010299956639811952137388947", "3")
+
+        Beware the usual problems with computing logarithms, as raised
+        by the ``decimal`` module.  Precision is gained if the
+        absolute value of the result is greater than or equal to one
+        since the significant figures of the input determine the
+        significant decimal places of the output.
+
+        Returns
+        -------
+        Quantity
+            A new ``Quantity`` with the computed base 10 logarithm,
+            computed significant figures from the input and the size
+            of the computed logarithm, and constant value from the
+            input ``Quantity``.
+        """
+        x = Quantity(self.value.log10(), self.figures, self.constant)
+
+        if abs(x.value) < 1:
+            # Significant figures is only the mantissa.
+            pass
+        else:
+            # Significant figures includes the abscissa digits as well.
+            x.figures += x.value.adjusted() + 1
+
+        return x
+
+    # Trigonometric functions and inverses.
+
+    def sin(self):  # dead: disable
+        """Calculate the sine of a ``Quantity``."""
+        return NotImplemented
+
+    def asin(self):  # dead: disable
+        """Calculate the inverse sine of a ``Quantity``."""
+        return NotImplemented
+
+    def cos(self):  # dead: disable
+        """Calculate the cosine of a ``Quantity``."""
+        return NotImplemented
+
+    def acos(self):  # dead: disable
+        """Calculate the inverse cosine of a ``Quantity``."""
+        return NotImplemented
+
+    def tan(self):  # dead: disable
+        """Calculate the tangent of a ``Quantity``."""
+        return NotImplemented
+
+    def atan(self):  # dead: disable
+        """Calculate the inverse tangent of a ``Quantity``."""
+        return NotImplemented
+
+    def csc(self):  # dead: disable
+        """Calculate the cosecant of a ``Quantity``."""
+        return NotImplemented
+
+    def acsc(self):  # dead: disable
+        """Calculate the inverse cosecant of a ``Quantity``."""
+        return NotImplemented
+
+    def sec(self):  # dead: disable
+        """Calculate the secant of a ``Quantity``."""
+        return NotImplemented
+
+    def asec(self):  # dead: disable
+        """Calculate the inverse secant of a ``Quantity``."""
+        return NotImplemented
+
+    def cot(self):  # dead: disable
+        """Calculate the cotangent of a ``Quantity``."""
+        return NotImplemented
+
+    def acot(self):  # dead: disable
+        """Calculate the inverse cotangent of a ``Quantity``."""
+        return NotImplemented
+
+    # Hyperbolic functions and inverses.
+
+    def sinh(self):  # dead: disable
+        """Calculate the hyperbolic sine of a ``Quantity``."""
+        return NotImplemented
+
+    def asinh(self):  # dead: disable
+        """Calculate the inverse hyperbolic sine of a ``Quantity``."""
+        return NotImplemented
+
+    def cosh(self):  # dead: disable
+        """Calculate the hyperbolic cosine of a ``Quantity``."""
+        return NotImplemented
+
+    def acosh(self):  # dead: disable
+        """Calculate the inverse hyperbolic cosine of a ``Quantity``."""
+        return NotImplemented
+
+    def tanh(self):  # dead: disable
+        """Calculate the hyperbolic tangent of a ``Quantity``."""
+        return NotImplemented
+
+    def atanh(self):  # dead: disable
+        """Calculate the inverse tangent of a ``Quantity``."""
+        return NotImplemented
+
+    def csch(self):  # dead: disable
+        """Calculate the hyperbolic cosecant of a ``Quantity``."""
+        return NotImplemented
+
+    def acsch(self):  # dead: disable
+        """Calculate the inverse hyperbolic cosecant of a ``Quantity``."""
+        return NotImplemented
+
+    def sech(self):  # dead: disable
+        """Calculate the hyperbolic secant of a ``Quantity``."""
+        return NotImplemented
+
+    def asech(self):  # dead: disable
+        """Calculate the inverse hyperbolic secant of a ``Quantity``."""
+        return NotImplemented
+
+    def coth(self):  # dead: disable
+        """Calculate the hyperbolic cotangent of a ``Quantity``."""
+        return NotImplemented
+
+    def acoth(self):  # dead: disable
+        """Calculate the inverse hyperbolic cotangent of a ``Quantity``."""
+        return NotImplemented

@@ -12,6 +12,7 @@
 
 """Quantity hypothesis tests."""
 
+import math
 from decimal import ROUND_05UP
 from decimal import ROUND_CEILING
 from decimal import ROUND_DOWN
@@ -225,3 +226,196 @@ def test_sqrt_hypothesis(q, r):
     assert q.value.sqrt() == e.value
     assert q.figures == e.figures
     assert q.constant == e.constant
+
+
+# Logarithmic function tests.
+@given(quantities(), rounding())
+def test_ln_hypothesis(q, r):
+    """Should calculate the natural logarithm of ``Quantity`` objects."""
+    # Avoid logarithm domain problems.
+    assume(q.value > Decimal("0"))
+    assume(not math.isnan(q.value))
+
+    getcontext().rounding = r
+    e = q.ln()
+
+    # Calculate significant figures.
+    if abs(q.value) >= Decimal("1").exp() or abs(q.value) <= Decimal("-1").exp():
+        # Include abscissa digits for values -1 <= x <= 1.
+        a = math.floor(math.log10(math.floor(abs(e.value)))) + 1
+    else:
+        # No abscissa digits.
+        a = 0
+
+    assert q.value.ln() == e.value
+    assert q.figures + a == e.figures
+    assert q.constant == e.constant
+
+
+@given(quantities(), rounding())
+def test_log10_hypothesis(q, r):
+    """Should calculate the base 10 logarithm of ``Quantity`` objects."""
+    # Avoid logarithm domain problems.
+    assume(q.value > Decimal("0"))
+    assume(not math.isnan(q.value))
+
+    getcontext().rounding = r
+    e = q.log10()
+
+    # Calculate significant figures.
+    if abs(q.value) >= Decimal("10") or abs(q.value) <= Decimal("0.1"):
+        # Include abscissa digits for values -1 <= x <= 1.
+        a = math.floor(math.log10(math.floor(abs(e.value)))) + 1
+    else:
+        # No abscissa digits.
+        a = 0
+
+    assert q.value.log10() == e.value
+    assert q.figures + a == e.figures
+    assert q.constant == e.constant
+
+
+# Trigonometric function tests.
+@given(quantities(), rounding())
+def test_sin_hypothesis(q, r):
+    """Should calculate the sine of ``Quantity`` objects."""
+    assert q.sin() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_asin_hypothesis(q, r):
+    """Should calculate the inverse sine of ``Quantity`` objects."""
+    assert q.asin() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_cos_hypothesis(q, r):
+    """Should calculate the cosine of ``Quantity`` objects."""
+    assert q.cos() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_acos_hypothesis(q, r):
+    """Should calculate the inverse cosine of ``Quantity`` objects."""
+    assert q.acos() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_tan_hypothesis(q, r):
+    """Should calculate the tangent of ``Quantity`` objects."""
+    assert q.tan() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_atan_hypothesis(q, r):
+    """Should calculate the inverse tangent of ``Quantity`` objects."""
+    assert q.atan() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_csc_hypothesis(q, r):
+    """Should calculate the cosecant of ``Quantity`` objects."""
+    assert q.csc() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_acsc_hypothesis(q, r):
+    """Should calculate the inverse cosecant of ``Quantity`` objects."""
+    assert q.acsc() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_sec_hypothesis(q, r):
+    """Should calculate the secant of ``Quantity`` objects."""
+    assert q.sec() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_asec_hypothesis(q, r):
+    """Should calculate the inverse secant of ``Quantity`` objects."""
+    assert q.asec() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_cot_hypothesis(q, r):
+    """Should calculate the cotangent of ``Quantity`` objects."""
+    assert q.cot() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_acot_hypothesis(q, r):
+    """Should calculate the inverse cotangent of ``Quantity`` objects."""
+    assert q.acot() == NotImplemented
+
+
+# Hyperbolic function tests.
+@given(quantities(), rounding())
+def test_sinh_hypothesis(q, r):
+    """Should calculate the hyperbolic sine of ``Quantity`` objects."""
+    assert q.sinh() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_asinh_hypothesis(q, r):
+    """Should calculate the inverse hyperbolic sine of ``Quantity`` objects."""
+    assert q.asinh() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_cosh_hypothesis(q, r):
+    """Should calculate the hyperbolic cosine of ``Quantity`` objects."""
+    assert q.cosh() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_acosh_hypothesis(q, r):
+    """Should calculate the inverse hyperbolic cosine of ``Quantity`` objects."""
+    assert q.acosh() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_tanh_hypothesis(q, r):
+    """Should calculate the hyperbolic tangent of ``Quantity`` objects."""
+    assert q.tanh() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_atanh_hypothesis(q, r):
+    """Should calculate the inverse hyperbolic tangent of ``Quantity`` objects."""
+    assert q.atanh() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_csch_hypothesis(q, r):
+    """Should calculate the hyperbolic cosecant of ``Quantity`` objects."""
+    assert q.csch() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_acsch_hypothesis(q, r):
+    """Should calculate the inverse hyperbolic cosecant of ``Quantity`` objects."""
+    assert q.acsch() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_sech_hypothesis(q, r):
+    """Should calculate the hyperbolic secant of ``Quantity`` objects."""
+    assert q.sech() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_asech_hypothesis(q, r):
+    """Should calculate the inverse hyperbolic secant of ``Quantity`` objects."""
+    assert q.asech() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_coth_hypothesis(q, r):
+    """Should calculate the hyperbolic cotangent of ``Quantity`` objects."""
+    assert q.coth() == NotImplemented
+
+
+@given(quantities(), rounding())
+def test_acoth_hypothesis(q, r):
+    """Should calculate the inverse hyperbolic cotangent of ``Quantity`` objects."""
+    assert q.acoth() == NotImplemented
