@@ -211,3 +211,17 @@ def test_exp_hypothesis(q, r):
     assert q.value.exp() == e.value
     assert q.figures == e.figures
     assert q.constant == e.constant
+
+
+@given(quantities(), rounding())
+def test_sqrt_hypothesis(q, r):
+    """Should calculate the square root of ``Quantity`` objects."""
+    # Avoid domain problems.
+    assume(q.value > Decimal("0"))
+
+    getcontext().rounding = r
+    e = q.sqrt()
+
+    assert q.value.sqrt() == e.value
+    assert q.figures == e.figures
+    assert q.constant == e.constant

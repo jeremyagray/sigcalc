@@ -242,7 +242,7 @@ class Quantity:
     def exp(self):
         """Calculate the base e exponential of a ``Quantity``.
 
-        Uses the ``exp()`` function from ``decimal.Decimal()`` for the
+        Uses the ``exp()`` function from ``decimal.Decimal`` for the
         exponential calculation and computes the significant figures
         from the significant figures of the input ``Quantity``.
 
@@ -262,3 +262,27 @@ class Quantity:
             ``Quantity``.
         """
         return Quantity(self.value.exp(), self.figures, self.constant)
+
+    def sqrt(self):
+        """Calculate the square root of a ``Quantity``.
+
+        Uses the ``sqrt()`` function from ``decimal.Decimal`` for the
+        square root calculation and computes the significant figures
+        from the significant figures of the input ``Quantity``.
+
+        >>> from sigcalc import Quantity
+        >>> a = Quantity("4", "3")
+        >>> b = Quantity("9", "4")
+        >>> a.sqrt()
+        Quantity("2", "3")
+        >>> b.sqrt()
+        Quantity("3", "4")
+
+        Returns
+        -------
+        Quantity
+            A new ``Quantity`` with the computed exponential and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        return Quantity(self.value.sqrt(), self.figures, self.constant)
