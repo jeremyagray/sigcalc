@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "sigcalc"
 copyright = "2023, Jeremy A Gray"
 author = "Jeremy A Gray"
-release = "0.1.0"
+release = "0.1.1"
 
 extensions = [
     "sphinx.ext.autodoc",

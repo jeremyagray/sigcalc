@@ -101,7 +101,7 @@ authors = [
 ]
 description = "significant figures calculations"
 name = "sigcalc"
-version = "0.1.0"
+version = "0.1.1"
 license = "GPL-3.0-or-later"
 maintainers = [
   "Jeremy A Gray <gray@flyquackswim.com>",
