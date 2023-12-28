@@ -24,12 +24,15 @@ from decimal import ROUND_UP
 from decimal import Decimal
 from decimal import getcontext
 
+import mpmath
 from hypothesis import assume
 from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
 
 from sigcalc import Quantity
+
+pi = Decimal("3.1415926535897932384626433832795028841971")
 
 
 @composite
@@ -279,13 +282,48 @@ def test_log10_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_sin_hypothesis(q, r):
     """Should calculate the sine of ``Quantity`` objects."""
-    assert q.sin() == NotImplemented
+    e = q.sin()
+
+    # Duplication; no need to test mpmath.
+    assert (
+        Decimal(mpmath.nstr(mpmath.sin(mpmath.mpmathify(q.value)), mpmath.mp.dps))
+        == e.value
+    )
+    assert q.figures == e.figures
+    assert q.constant == e.constant
 
 
 @given(quantities(), rounding())
 def test_asin_hypothesis(q, r):
     """Should calculate the inverse sine of ``Quantity`` objects."""
-    assert q.asin() == NotImplemented
+    assume(q.value >= -1 and q.value <= 1)
+    e = q.asin()
+
+    # Duplication; no need to test mpmath.
+    assert (
+        Decimal(mpmath.nstr(mpmath.asin(mpmath.mpmathify(q.value)), mpmath.mp.dps))
+        == e.value
+    )
+    assert q.figures == e.figures
+    assert q.constant == e.constant
+
+
+@given(quantities(), rounding())
+def test_sine_roundtrip_hypothesis(q, r):
+    """Should roundtrip the sine and inverse sine of ``Quantity`` objects."""
+    assume(q.value >= -pi / 2 and q.value <= pi / 2)
+    e = q.sin().asin()
+
+    assert mpmath.almosteq(mpmath.mpmathify(q.value), mpmath.mpmathify(q.value))
+    assert q.figures == e.figures
+    assert q.constant == e.constant
+
+    assume(q.value >= -1 and q.value <= 1)
+    e = q.asin().sin()
+
+    assert mpmath.almosteq(mpmath.mpmathify(q.value), mpmath.mpmathify(q.value))
+    assert q.figures == e.figures
+    assert q.constant == e.constant
 
 
 @given(quantities(), rounding())
