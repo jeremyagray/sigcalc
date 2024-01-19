@@ -10,8 +10,18 @@
 #
 # ******************************************************************************
 
-"""sigcalc module initialization."""
+"""sigcalc constants."""
 
-from .constants import e
-from .constants import pi
+from decimal import Decimal
+
 from .quantity import Quantity
+
+pi = Quantity(
+    Decimal("3.1415926535897932384626433832795028841971"),
+    constant=True,
+)
+
+e = Quantity(
+    Decimal("2.7182818284590452353602874713526624977572"),
+    constant=True,
+)
