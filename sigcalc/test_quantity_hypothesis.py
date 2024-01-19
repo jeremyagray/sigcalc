@@ -25,6 +25,7 @@ from decimal import Decimal
 from decimal import getcontext
 
 import mpmath
+import pytest
 from hypothesis import assume
 from hypothesis import given
 from hypothesis import strategies as st
@@ -72,6 +73,54 @@ def rounding(draw):
             ]
         )
     )
+
+
+@given(
+    st.decimals(
+        allow_nan=False,
+        allow_infinity=False,
+    ),
+)
+def test___init__raises_without_figures_nonconstant(value):
+    """Should raise ``TypeError`` without ``figures`` if not constant."""
+    with pytest.raises(TypeError):
+        Quantity(value)
+
+
+@given(
+    st.decimals(
+        allow_nan=False,
+        allow_infinity=False,
+    ),
+    st.integers(
+        min_value=1,
+        max_value=100,
+    ),
+)
+def test___init__creates_quantity_objects(value, figures):
+    """Should create ``Quantity`` objects."""
+    q = Quantity(value, Decimal(str(figures)))
+    assert q.value == value
+    assert q.figures == Decimal(str(figures))
+    assert q.constant is False
+
+
+@given(
+    st.decimals(
+        allow_nan=False,
+        allow_infinity=False,
+    ),
+    st.integers(
+        min_value=1,
+        max_value=100,
+    ),
+)
+def test___init__creates_quantity_constants(value, figures):
+    """Should create ``Quantity`` objects."""
+    q = Quantity(value, Decimal(str(figures)), constant=True)
+    assert q.value == value
+    assert q.figures == getcontext().prec
+    assert q.constant is True
 
 
 @given(quantities(), rounding())
