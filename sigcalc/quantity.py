@@ -21,7 +21,7 @@ import mpmath
 class Quantity:
     """A quantity for significant figure calculations."""
 
-    def __init__(self, value, figures, constant=False):
+    def __init__(self, value, figures=None, constant=False):
         """Initialize a ``Quantity()``.
 
         Parameters
@@ -34,6 +34,11 @@ class Quantity:
         constant : boolean
             Set as constant (unlimited precision), or not.
         """
+        if not constant and figures is None:
+            raise TypeError("`figures` should not be None for non-constants")
+        elif constant:
+            figures = 1
+
         self.value = Decimal(str(value))
 
         getcontext().prec = max(
