@@ -2,7 +2,7 @@
 #
 # sigcalc, significant figures calculations
 #
-# Copyright 2023 Jeremy A Gray <gray@flyquackswim.com>.
+# Copyright 2023-2024 Jeremy A Gray <gray@flyquackswim.com>.
 #
 # All rights reserved.
 #

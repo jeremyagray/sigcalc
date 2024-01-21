@@ -46,6 +46,8 @@ Usage
 Import the ``Quantity`` class:
 
 >>> from sigcalc import Quantity
+>>> from decimal import getcontext
+>>> getcontext().prec = 28
 
 Create ``Quantity`` objects as necessary:
 
@@ -59,6 +61,13 @@ of significant figures, within the limits of the ``decimal`` module.
 Arithmetic for ``Quantity`` objects is implemented on the usual magic
 methods:
 
+>>> from sigcalc import Quantity
+>>> from decimal import getcontext
+>>> from decimal import ROUND_HALF_EVEN
+>>> getcontext().prec = 28
+>>> getcontext().rounding = ROUND_HALF_EVEN
+>>> a = Quantity("3.14", "3")
+>>> b = Quantity("2.72", "3")
 >>> a + b
 Quantity("5.86", "3")
 >>> a - b
@@ -172,10 +181,38 @@ Likewise with formatting:
 >>> format(b, ".2e")
 '3.14e+0'
 
-The transcendental and exponential functions will be implemented as
-wrappers around the appropriate functions from ``decimal`` and
-``mpmath``, calculating results based on the ``value`` of a
-``Quantity`` with the correct significant figures.
+Exponential and Logarithmic Functions
+.....................................
+
+The exponential and logarithmic functions are implemented as wrappers
+around the corresponding functions from ``decimal`` to calculate the
+``value`` of a ``Quantity`` combined with the correct significant
+figures.  Abscissa digits are treated as placeholders so a logarithm
+will increase significance by the number of significant abscissa
+digits; exponentials will decrease the significance by the number of
+significant abscissa digits.  Consequently, if a ``Quantity`` has
+significant figures less than or equal to the number of abscissa
+digits, a ``RuntimeWarning`` will be raised and a ``Quantity`` with
+zero significant figures will be returned.  See the references for
+more information.
+
+Transcendental Functions
+........................
+
+The transcendental functions and their inverses will be implemented as
+wrappers around the appropriate functions from ``mpmath``, calculating
+results based on the ``value`` of a ``Quantity`` combined with the
+correct significant figures, following the "significance in,
+significance out" rule.
+
+Hyperbolic Functions
+....................
+
+The hyperbolic functions and their inverses will be implemented as
+wrappers around the appropriate functions from ``mpmath``, calculating
+results based on the ``value`` of a ``Quantity`` combined with the
+correct significant figures, following the "significance in,
+significance out" rule.
 
 References
 ----------
@@ -187,6 +224,7 @@ textbooks, examples of which may be found at:
 1. `Significant Figures at Wikipedia <https://en.wikipedia.org/wiki/Significant_figures>`_
 2. `Significance Arithmetic at Wikipedia <https://en.wikipedia.org/wiki/Significance_arithmetic>`_
 3. Myers, R.T.; Tocci, S.; Oldham, K.B., Holt Chemistry, Holt, Rinehart and Winston: 2006.
+4. `"How many significant figures in 0.0" <https://math.stackexchange.com/questions/2149316/>`_
 
 Calculating with significant figures is not a substitute for
 repetition of measurements and proper statistical analysis.

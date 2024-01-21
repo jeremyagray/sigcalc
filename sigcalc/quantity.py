@@ -2,7 +2,7 @@
 #
 # sigcalc, significant figures calculations
 #
-# Copyright 2023 Jeremy A Gray <gray@flyquackswim.com>.
+# Copyright 2023-2024 Jeremy A Gray <gray@flyquackswim.com>.
 #
 # All rights reserved.
 #
@@ -14,6 +14,7 @@
 
 from decimal import Decimal
 from decimal import getcontext
+from warnings import warn
 
 import mpmath
 
@@ -31,13 +32,13 @@ class Quantity:
         figures : str
             Significant figures of the quantity, to be converted to a
             ``Decimal``.
-        constant : boolean
+        constant : bool
             Set as constant (unlimited precision), or not.
         """
         if not constant and figures is None:
             raise TypeError("`figures` should not be None for non-constants")
         elif constant:
-            figures = 1
+            figures = Decimal("1")
 
         self.value = Decimal(str(value))
 
@@ -236,13 +237,18 @@ class Quantity:
 
         Returns
         -------
-        Quantity
+        sigcalc.Quantity
             A new ``Quantity`` equal to the rounded ``self``.
         """
         if self.constant:
             return Quantity(self.value, self.figures, self.constant)
 
-        return Quantity(self._round(), self.figures, self.constant)
+        value = self._round()
+        figures = self.figures
+        if value.adjusted() > self.value.adjusted():
+            figures += 1
+
+        return Quantity(value, figures, self.constant)
 
     # Exponential functions.
 
@@ -254,21 +260,168 @@ class Quantity:
         from the significant figures of the input ``Quantity``.
 
         >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
         >>> a = Quantity("1", "3")
         >>> b = Quantity("0", "3")
         >>> a.exp()
-        Quantity("2.718281828459045235360287471", "3")
+        Quantity("2.718281828459045235360287471", "2")
+        >>> import warnings
+        >>> warnings.simplefilter("error")
+        >>> b.exp()  # warn on ambiguous input, but return an answer
+        Traceback (most recent call last):
+        ...
+        RuntimeWarning: ambiguous zero valued ``Quantity``:  Quantity("0", "3")
+        >>> warnings.simplefilter("ignore")
         >>> b.exp()
-        Quantity("1", "3")
+        Quantity("1", "0")
+        >>> warnings.simplefilter("error")
+        >>> c = Quantity("10", "2")
+        >>> c.exp()  # warn on insufficient precision, but return an answer
+        Traceback (most recent call last):
+        ...
+        RuntimeWarning: insufficient input precision in Quantity("10", "2"): the 2 abscissa digits consume the available precision (2)
+        >>> warnings.simplefilter("ignore")
+        >>> c.exp()
+        Quantity("22026.46579480671651695790065", "0")
 
         Returns
         -------
-        Quantity
+        sigcalc.Quantity
             A new ``Quantity`` with the computed exponential and
             significant figures and constant value from the input
             ``Quantity``.
-        """
-        return Quantity(self.value.exp(), self.figures, self.constant)
+
+        Raises
+        ------
+        RuntimeWarning
+            If ``self.value`` is zero, there are no significant
+            figures.  Raise and return ``Quantity("1", "0")``.  Also
+            raise if there are fewer significant figures than abscissa
+            digits since the abscissa digits are placeholders from the
+            logarithm.
+        """  # noqa: E501
+        # Warn on zero.
+        if self.value == Decimal("0"):
+            warn(f"ambiguous zero valued ``Quantity``:  {repr(self)}", RuntimeWarning)
+            return Quantity("1", "0")
+
+        value = self.value.exp()
+
+        # Default precision for no abscissa.
+        figures = self.figures
+
+        # Constants.
+        if self.constant:
+            return Quantity(
+                value,
+                constant=self.constant,
+            )
+
+        # Chop abscissa places since they are not significant in the logarithm.
+        if abs(self.value) >= Decimal("1"):
+            figures = self.figures - (self.value.adjusted() + Decimal("1"))
+
+        if figures < Decimal("1"):
+            warn(
+                f"insufficient input precision in {repr(self)}: "
+                f"the {self.value.adjusted() + Decimal('1')} "
+                f"abscissa digits consume the available precision ({self.figures})",
+                RuntimeWarning,
+            )
+            figures = Decimal("0")
+
+        # No abscissa.
+        return Quantity(
+            value,
+            figures,
+        )
+
+    def exp10(self):  # dead: disable
+        """Calculate the base 10 exponential of a ``Quantity``.
+
+        Uses the ``__pow__()`` function from ``decimal.Decimal`` for
+        the exponential calculation and computes the significant
+        figures from the significant figures of the input
+        ``Quantity``.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> a = Quantity("1", "3")
+        >>> b = Quantity("0", "3")
+        >>> a.exp10()
+        Quantity("10", "2")
+        >>> import warnings
+        >>> warnings.simplefilter("error")
+        >>> b.exp10()  # warn on ambiguous input, but return an answer
+        Traceback (most recent call last):
+        ...
+        RuntimeWarning: ambiguous zero valued ``Quantity``:  Quantity("0", "3")
+        >>> warnings.simplefilter("ignore")
+        >>> b.exp10()
+        Quantity("1", "0")
+        >>> warnings.simplefilter("error")
+        >>> c = Quantity("10", "2")
+        >>> c.exp10()  # warn on insufficient precision, but return an answer
+        Traceback (most recent call last):
+        ...
+        RuntimeWarning: insufficient input precision in Quantity("10", "2"): the 2 abscissa digits consume the available precision (2)
+        >>> warnings.simplefilter("ignore")
+        >>> c.exp10()
+        Quantity("10000000000", "0")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed exponential and
+            significant figures and constant value from the input
+            ``Quantity``.
+
+        Raises
+        ------
+        RuntimeWarning
+            If ``self.value`` is zero, there are no significant
+            figures.  Raise and return ``Quantity("1", "0")``.  Also
+            raise if there are fewer significant figures than abscissa
+            digits since the abscissa digits are placeholders from the
+            logarithm.
+        """  # noqa: E501
+        # Warn on zero.
+        if self.value == Decimal("0"):
+            warn(f"ambiguous zero valued ``Quantity``:  {repr(self)}", RuntimeWarning)
+            return Quantity("1", "0")
+
+        value = pow(Decimal("10"), self.value)
+
+        # Default precision for no abscissa.
+        figures = self.figures
+
+        # Constants.
+        if self.constant:
+            return Quantity(
+                value,
+                constant=self.constant,
+            )
+
+        # Chop abscissa places since they are not significant in the logarithm.
+        if abs(self.value) >= Decimal("1"):
+            figures = self.figures - (self.value.adjusted() + Decimal("1"))
+
+        if figures < Decimal("1"):
+            warn(
+                f"insufficient input precision in {repr(self)}: "
+                f"the {self.value.adjusted() + Decimal('1')} "
+                f"abscissa digits consume the available precision ({self.figures})",
+                RuntimeWarning,
+            )
+            figures = Decimal("0")
+
+        # No abscissa.
+        return Quantity(
+            value,
+            figures,
+        )
 
     def sqrt(self):
         """Calculate the square root of a ``Quantity``.
@@ -287,7 +440,7 @@ class Quantity:
 
         Returns
         -------
-        Quantity
+        sigcalc.Quantity
             A new ``Quantity`` with the computed square root and
             significant figures and constant value from the input
             ``Quantity``.
@@ -320,22 +473,23 @@ class Quantity:
 
         Returns
         -------
-        Quantity
+        sigcalc.Quantity
             A new ``Quantity`` with the computed natural logarithm,
             computed significant figures from the input and the size
             of the computed logarithm, and constant value from the
             input ``Quantity``.
         """
-        x = Quantity(self.value.ln(), self.figures, self.constant)
+        value = self.value.ln()
+        figures = self.figures
 
-        if abs(x.value) < 1:
-            # Significant figures is only the mantissa.
-            pass
-        else:
-            # Significant figures includes the abscissa digits as well.
-            x.figures += x.value.adjusted() + 1
+        if abs(value) >= Decimal("1"):
+            # Significant figures includes the abscissa digits.
+            figures += value.adjusted() + Decimal("1")
 
-        return x
+        if self.constant:
+            return Quantity(value, constant=self.constant)
+
+        return Quantity(value, figures)
 
     def log10(self):
         """Calculate the base 10 logarithm of a ``Quantity``.
@@ -361,22 +515,23 @@ class Quantity:
 
         Returns
         -------
-        Quantity
+        sigcalc.Quantity
             A new ``Quantity`` with the computed base 10 logarithm,
             computed significant figures from the input and the size
             of the computed logarithm, and constant value from the
             input ``Quantity``.
         """
-        x = Quantity(self.value.log10(), self.figures, self.constant)
+        value = self.value.log10()
+        figures = self.figures
 
-        if abs(x.value) < 1:
-            # Significant figures is only the mantissa.
-            pass
-        else:
-            # Significant figures includes the abscissa digits as well.
-            x.figures += x.value.adjusted() + 1
+        if abs(value) >= Decimal("1"):
+            # Significant figures includes the abscissa digits.
+            figures += value.adjusted() + Decimal("1")
 
-        return x
+        if self.constant:
+            return Quantity(value, constant=self.constant)
+
+        return Quantity(value, figures)
 
     # Trigonometric functions and inverses.
 
@@ -410,7 +565,7 @@ class Quantity:
 
         Returns
         -------
-        Quantity
+        sigcalc.Quantity
             A new ``Quantity`` with the computed sine and significant
             figures and constant value from the input ``Quantity``.
         """
@@ -447,7 +602,7 @@ class Quantity:
 
         Returns
         -------
-        Quantity
+        sigcalc.Quantity
             A new ``Quantity`` with the computed sine and significant
             figures and constant value from the input ``Quantity``.
         """
