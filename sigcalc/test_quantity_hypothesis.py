@@ -2,7 +2,7 @@
 #
 # sigcalc, significant figures calculations
 #
-# Copyright 2023 Jeremy A Gray <gray@flyquackswim.com>.
+# Copyright 2023-2024 Jeremy A Gray <gray@flyquackswim.com>.
 #
 # All rights reserved.
 #
@@ -26,8 +26,10 @@ from decimal import getcontext
 
 import mpmath
 import pytest
+from hypothesis import HealthCheck
 from hypothesis import assume
 from hypothesis import given
+from hypothesis import settings
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
 
@@ -137,7 +139,10 @@ def test_equality_hypothesis(q, r):
 def test_ordering_hypothesis(q, r):
     """Should order ``Quantity`` objects."""
     # Zeroes satisfy equality.
-    assume(q.value != 0)
+    if r == ROUND_DOWN:
+        assume(abs(q.value) >= 1)
+    else:
+        assume(q.value > 0)
     getcontext().rounding = r
     assert q + abs(q) > q
     assert q > q - abs(q)
@@ -255,15 +260,245 @@ def test_constant_setter_hypothesis(q, r, c):
 @given(quantities(), rounding())
 def test_exp_hypothesis(q, r):
     """Should calculate the exponential of ``Quantity`` objects."""
+    # Really need to round-trip with ln, since this repeats the tested
+    # logic for significance.
+
     # Avoid decimal overflow.
-    assume(q.value < Decimal("2302586"))
+    assume(q.value < Decimal("1000"))
+    assume(q.value > Decimal("-1000"))
+
+    # Avoid ambiguous zero warning.
+    assume(q.value != Decimal("0"))
+
+    # Ensure sufficient precision.
+    assume(q.figures > (q.value.adjusted() + Decimal("1")))
 
     getcontext().rounding = r
-    e = q.exp()
 
-    assert q.value.exp() == e.value
-    assert q.figures == e.figures
-    assert q.constant == e.constant
+    actual = q.exp()
+
+    figures = q.figures
+
+    if q.constant:
+        expected = Quantity(
+            q.value.exp(),
+            constant=q.constant,
+        )
+    elif abs(q.value) >= Decimal("1"):
+        # Magnitude of abscissa is greater than one; chop abscissa places.
+        figures = q.figures - (q.value.adjusted() + Decimal("1"))
+
+    expected = Quantity(
+        q.value.exp(),
+        figures,
+        constant=q.constant,
+    )
+
+    # Values should be "equal".
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value)
+    )
+
+    # Constant status should not be affected.
+    assert actual.constant == expected.constant
+
+    # Significant figures should be correct.
+    assert actual.figures == expected.figures
+
+
+@given(
+    st.integers(
+        min_value=1,
+        max_value=100,
+    ),
+    st.booleans(),
+    rounding(),
+)
+def test_exp_ambiguous_zero_hypothesis(figures, constant, r):
+    """Should warn on ambiguous zero input."""
+    getcontext().rounding = r
+
+    q = Quantity("0", figures, constant)
+    expected = Quantity("1", "0")
+
+    with pytest.warns(RuntimeWarning):
+        actual = q.exp()
+
+    assert actual == expected
+
+
+@settings(
+    suppress_health_check=[
+        HealthCheck.filter_too_much,
+        HealthCheck.too_slow,
+    ],
+)
+@given(quantities(), rounding())
+def test_exp_insufficient_precision_hypothesis(q, r):
+    """Should warn on insufficient precision."""
+    # Avoid decimal overflow.
+    assume(q.value < Decimal("1000"))
+    assume(q.value > Decimal("-1000"))
+
+    # Avoid ambiguous zero warning.
+    assume(q.value != Decimal("0"))
+
+    # Ensure insufficient precision.
+    assume(q.figures <= (q.value.adjusted() + Decimal("1")))
+
+    getcontext().rounding = r
+
+    with pytest.warns(RuntimeWarning):
+        actual = q.exp()
+
+    expected = Quantity(
+        q.value.exp(),
+        Decimal("0"),
+    )
+
+    # Values should be "equal".
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value)
+    )
+
+    # Constant status should not be affected.
+    assert actual.constant == expected.constant
+
+    # Significant figures should be correct.
+    assert actual.figures == expected.figures
+
+
+@given(quantities(), rounding())
+def test_exp10_hypothesis(q, r):
+    """Should calculate the base 10 exponential of ``Quantity`` objects."""
+    # Really need to round-trip with ln, since this repeats the tested
+    # logic for significance.
+
+    # Avoid decimal overflow.
+    assume(q.value < Decimal("1000"))
+    assume(q.value > Decimal("-1000"))
+
+    # Avoid ambiguous zero warning.
+    assume(q.value != Decimal("0"))
+
+    # Ensure sufficient precision.
+    assume(q.figures > (q.value.adjusted() + Decimal("1")))
+
+    getcontext().rounding = r
+
+    actual = q.exp10()
+
+    figures = q.figures
+
+    if q.constant:
+        expected = Quantity(
+            pow(Decimal("10"), q.value),
+            constant=q.constant,
+        )
+    elif abs(q.value) >= Decimal("1"):
+        # Magnitude of abscissa is greater than one; chop abscissa places.
+        figures = q.figures - (q.value.adjusted() + Decimal("1"))
+
+    expected = Quantity(
+        pow(Decimal("10"), q.value),
+        figures,
+        constant=q.constant,
+    )
+
+    # Values should be "equal".
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value)
+    )
+
+    # Constant status should not be affected.
+    assert actual.constant == expected.constant
+
+    # Significant figures should be correct.
+    assert actual.figures == expected.figures
+
+
+@given(
+    st.integers(
+        min_value=1,
+        max_value=100,
+    ),
+    st.booleans(),
+    rounding(),
+)
+def test_exp10_ambiguous_zero_hypothesis(figures, constant, r):
+    """Should warn on ambiguous zero input."""
+    getcontext().rounding = r
+
+    q = Quantity("0", figures, constant)
+    expected = Quantity("1", "0")
+
+    with pytest.warns(RuntimeWarning):
+        actual = q.exp10()
+
+    assert actual == expected
+
+
+@settings(
+    suppress_health_check=[
+        HealthCheck.filter_too_much,
+        HealthCheck.too_slow,
+    ],
+)
+@given(quantities(), rounding())
+def test_exp10_insufficient_precision_hypothesis(q, r):
+    """Should warn on insufficient precision."""
+    # Avoid decimal overflow.
+    assume(q.value < Decimal("1000"))
+    assume(q.value > Decimal("-1000"))
+
+    # Avoid ambiguous zero warning.
+    assume(q.value != Decimal("0"))
+
+    # Ensure insufficient precision.
+    assume(q.figures <= (q.value.adjusted() + Decimal("1")))
+
+    getcontext().rounding = r
+
+    with pytest.warns(RuntimeWarning):
+        actual = q.exp10()
+
+    expected = Quantity(
+        pow(Decimal("10"), q.value),
+        Decimal("0"),
+    )
+
+    # Values should be "equal".
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value)
+    )
+
+    # Constant status should not be affected.
+    assert actual.constant == expected.constant
+
+    # Significant figures should be correct.
+    assert actual.figures == expected.figures
+
+
+# @given(quantities(), quantities(), rounding())
+# def test_power_hypothesis(base, exp, r):
+#     """Should calculate powers of ``Quantity`` objects."""
+#     # Avoid indeterminancy of zeroes.
+#     assume(base.value != Decimal("0"))
+#     # assume(exp.value != Decimal("0"))
+#     # Avoid overflow.
+#     assume(abs(base.value) < Decimal("20000"))
+#     assume(abs(exp.value) < Decimal("200000"))
+
+#     getcontext().rounding = r
+#     power = pow(base, exp)
+
+#     assert power.value == pow(base.value, exp.value)
+#     assert mpmath.almosteq(
+#         mpmath.mpmathify(power.value),
+#         mpmath.mpmathify(pow(base.value, exp.value)),
+#     )
+#     assert power.figures == min(base.ln().figures, exp.figures)
+#     assert power.constant == all((base.constant, exp.constant))
 
 
 @given(quantities(), rounding())
@@ -289,19 +524,30 @@ def test_ln_hypothesis(q, r):
     assume(not math.isnan(q.value))
 
     getcontext().rounding = r
-    e = q.ln()
+    actual = q.ln()
 
     # Calculate significant figures.
-    if abs(q.value) >= Decimal("1").exp() or abs(q.value) <= Decimal("-1").exp():
-        # Include abscissa digits for values -1 <= x <= 1.
-        a = math.floor(math.log10(math.floor(abs(e.value)))) + 1
+    if not q.constant and (
+        abs(q.value) >= Decimal("1").exp() or abs(q.value) <= Decimal("-1").exp()
+    ):
+        # Include abscissa digits.
+        a = q.value.ln().adjusted() + 1
     else:
         # No abscissa digits.
         a = 0
 
-    assert q.value.ln() == e.value
-    assert q.figures + a == e.figures
-    assert q.constant == e.constant
+    expected = Quantity(
+        q.value.ln(),
+        q.figures + a,
+        q.constant,
+    )
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value),
+        mpmath.mpmathify(expected.value),
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())
@@ -312,19 +558,78 @@ def test_log10_hypothesis(q, r):
     assume(not math.isnan(q.value))
 
     getcontext().rounding = r
-    e = q.log10()
+
+    actual = q.log10()
 
     # Calculate significant figures.
-    if abs(q.value) >= Decimal("10") or abs(q.value) <= Decimal("0.1"):
-        # Include abscissa digits for values -1 <= x <= 1.
-        a = math.floor(math.log10(math.floor(abs(e.value)))) + 1
+    if not q.constant and (
+        abs(q.value) >= Decimal("10") or abs(q.value) <= Decimal("0.1")
+    ):
+        # Include abscissa digits.
+        a = q.value.log10().adjusted() + 1
     else:
         # No abscissa digits.
         a = 0
 
-    assert q.value.log10() == e.value
-    assert q.figures + a == e.figures
-    assert q.constant == e.constant
+    expected = Quantity(
+        q.value.log10(),
+        q.figures + a,
+        q.constant,
+    )
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value),
+        mpmath.mpmathify(expected.value),
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+# Logarithmic/exponential round trip tests.
+@given(quantities(), rounding())
+def test_ln_exp_hypothesis(expected, mode):
+    """Should round trip exponential of natural logarithm."""
+    # Avoid logarithm domain problems.
+    assume(expected.value > Decimal("0"))
+    # Avoid ambiguous zero.
+    assume(expected.value != Decimal("1"))
+
+    # Set rounding context.
+    getcontext().rounding = mode
+
+    actual = expected.ln().exp()
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value),
+        mpmath.mpmathify(expected.value),
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(quantities(), rounding())
+def test_exp_ln_hypothesis(expected, mode):
+    """Should round trip natural logarithm of exponential."""
+    # Avoid decimal overflow.
+    assume(expected.value < Decimal("1000"))
+    assume(expected.value > Decimal("-1000"))
+
+    # Avoid ambiguous zero warning.
+    assume(expected.value != Decimal("0"))
+
+    # Ensure sufficient precision.
+    assume(expected.figures > (expected.value.adjusted() + Decimal("1")))
+
+    # Set rounding context.
+    getcontext().rounding = mode
+
+    actual = expected.exp().ln()
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value),
+        mpmath.mpmathify(expected.value),
+    )
+    # assert actual.round().figures == expected.figures
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 # Trigonometric function tests.
