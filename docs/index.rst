@@ -2,7 +2,7 @@
 ..
 .. sigcalc, significant figures calculations
 ..
-.. Copyright 2023 Jeremy A Gray <gray@flyquackswim.com>.
+.. Copyright 2023-2024 Jeremy A Gray <gray@flyquackswim.com>.
 ..
 .. All rights reserved.
 ..
@@ -18,10 +18,11 @@ sigcalc Documentation
    :maxdepth: 3
    :caption: Contents:
 
-   ../readme
-   ../classes
-   ../functions
-   ../license
+   readme
+   api
+   classes
+   functions
+   license
 
 ==================
 Indices and Tables

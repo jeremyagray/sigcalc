@@ -10,12 +10,16 @@
 ..
 .. *****************************************************************************
 
-=========
-Functions
-=========
-
 .. toctree::
    :maxdepth: 2
 
-..
-   .. autofunction::
+===
+API
+===
+
+.. autosummary::
+   :toctree:
+
+   sigcalc.Quantity
+   sigcalc.e
+   sigcalc.pi
