@@ -193,6 +193,51 @@ class Quantity:
 
         return NotImplemented
 
+    def __pow__(self, other, modulo=None):
+        """Calculate a power of a ``Quantity``.
+
+        Calculate a power of a ``Quantity`` and compute the correct
+        number of significant figures.  The ``__pow__`` from
+        ``decimal.Decimal`` is used to calculate the value of the
+        power.
+
+        Significant figures follows "significance in, significance
+        out" rule since this is (naively) multiplication.  This makes
+        the assumption that the exponent will usually be an integer
+        anyway and that the precision will be controlled by ``self``.
+
+        >>> from sigcalc import Quantity
+        >>> a = Quantity("2", "3")
+        >>> b = Quantity("2", "3")
+        >>> a**b
+        Quantity("4", "3")
+        >>> b = Quantity("2", "2")
+        >>> a**b
+        Quantity("4", "3")
+        >>> a = Quantity("2", "2")
+        >>> b = Quantity("2", "3")
+        >>> a**b
+        Quantity("4", "2")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed power and significant
+            figures and constant value from the input ``Quantity``.
+        """
+        value = pow(self.value, other.value, modulo)
+
+        if self.constant:
+            return Quantity(
+                value,
+                constant=True,
+            )
+
+        return Quantity(
+            value,
+            self.figures,
+        )
+
     @property
     def constant(self):
         """Mark a ``Quantity`` as a constant with unlimited precision."""

@@ -181,15 +181,25 @@ Likewise with formatting:
 >>> format(b, ".2e")
 '3.14e+0'
 
+Power and Square Root Functions
+...............................
+
+The power and square root (``__pow__()`` and ``sqrt()``) functions and
+are implemented as wrappers around the appropriate functions from
+``decimal.Decimal``, calculating results based on the ``value`` of a
+``Quantity`` combined with the correct significant figures, following
+the "significance in, significance out" rule for both functions.
+
 Exponential and Logarithmic Functions
 .....................................
 
-The exponential and logarithmic functions are implemented as wrappers
-around the corresponding functions from ``decimal`` to calculate the
-``value`` of a ``Quantity`` combined with the correct significant
-figures.  Abscissa digits are treated as placeholders so a logarithm
-will increase significance by the number of significant abscissa
-digits; exponentials will decrease the significance by the number of
+The exponential and logarithmic (``exp()``, ``exp10()``, ``ln()``, and
+``log10()``) functions are implemented as wrappers around the
+corresponding functions from ``decimal`` to calculate the ``value`` of
+a ``Quantity`` combined with the correct significant figures.
+Abscissa digits are treated as placeholders so a logarithm will
+increase significance by the number of significant abscissa digits;
+exponentials will decrease the significance by the number of
 significant abscissa digits.  Consequently, if a ``Quantity`` has
 significant figures less than or equal to the number of abscissa
 digits, a ``RuntimeWarning`` will be raised and a ``Quantity`` with
