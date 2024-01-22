@@ -22,6 +22,7 @@ from decimal import ROUND_HALF_EVEN
 from decimal import ROUND_HALF_UP
 from decimal import ROUND_UP
 from decimal import Decimal
+from decimal import InvalidOperation
 from decimal import getcontext
 
 import mpmath
@@ -479,26 +480,41 @@ def test_exp10_insufficient_precision_hypothesis(q, r):
     assert actual.figures == expected.figures
 
 
-# @given(quantities(), quantities(), rounding())
-# def test_power_hypothesis(base, exp, r):
-#     """Should calculate powers of ``Quantity`` objects."""
-#     # Avoid indeterminancy of zeroes.
-#     assume(base.value != Decimal("0"))
-#     # assume(exp.value != Decimal("0"))
-#     # Avoid overflow.
-#     assume(abs(base.value) < Decimal("20000"))
-#     assume(abs(exp.value) < Decimal("200000"))
+@given(quantities(), quantities(), rounding())
+def test_power_hypothesis(base, exp, r):
+    """Should calculate powers of ``Quantity`` objects."""
+    # Avoid indeterminancy of zeroes.
+    assume(base.value != Decimal("0"))
 
-#     getcontext().rounding = r
-#     power = pow(base, exp)
+    # Avoid overflow/underflow.
+    assume(abs(base.value) < Decimal("1000"))
+    assume(abs(exp.value) < Decimal("100"))
 
-#     assert power.value == pow(base.value, exp.value)
-#     assert mpmath.almosteq(
-#         mpmath.mpmathify(power.value),
-#         mpmath.mpmathify(pow(base.value, exp.value)),
-#     )
-#     assert power.figures == min(base.ln().figures, exp.figures)
-#     assert power.constant == all((base.constant, exp.constant))
+    getcontext().rounding = r
+
+    if base.value < Decimal("0") and Decimal(int(exp.value)) != exp.value:
+        with pytest.raises(InvalidOperation):
+            actual = pow(base, exp)
+    else:
+        actual = pow(base, exp)
+
+        if base.constant:
+            expected = Quantity(
+                pow(base.value, exp.value),
+                constant=base.constant,
+            )
+        else:
+            expected = Quantity(
+                pow(base.value, exp.value),
+                base.figures,
+            )
+
+        assert mpmath.almosteq(
+            mpmath.mpmathify(actual.value),
+            mpmath.mpmathify(expected.value),
+        )
+        assert actual.figures == expected.figures
+        assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())
