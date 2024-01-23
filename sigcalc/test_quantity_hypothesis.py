@@ -764,13 +764,57 @@ def test_cos_of_acos_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_tan_hypothesis(q, r):
     """Should calculate the tangent of ``Quantity`` objects."""
-    assert q.tan() == NotImplemented
+    e = q.tan()
+
+    # Duplication; no need to test mpmath.
+    assert (
+        Decimal(mpmath.nstr(mpmath.tan(mpmath.mpmathify(q.value)), mpmath.mp.dps))
+        == e.value
+    )
+    assert q.figures == e.figures
+    assert q.constant == e.constant
 
 
 @given(quantities(), rounding())
 def test_atan_hypothesis(q, r):
     """Should calculate the inverse tangent of ``Quantity`` objects."""
-    assert q.atan() == NotImplemented
+    e = q.atan()
+
+    # Duplication; no need to test mpmath.
+    assert (
+        Decimal(mpmath.nstr(mpmath.atan(mpmath.mpmathify(q.value)), mpmath.mp.dps))
+        == e.value
+    )
+    assert q.figures == e.figures
+    assert q.constant == e.constant
+
+
+@given(quantities(), rounding())
+def test_atan_of_tan_hypothesis(expected, r):
+    """Should return input."""
+    assume(
+        expected.value >= -pi.value / Decimal("2")
+        and expected.value <= pi.value / Decimal("2")
+    )
+    actual = expected.tan().atan()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(quantities(), rounding())
+def test_tan_of_atan_hypothesis(expected, r):
+    """Should return input."""
+    actual = expected.atan().tan()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())

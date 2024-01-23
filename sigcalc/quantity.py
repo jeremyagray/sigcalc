@@ -750,13 +750,84 @@ class Quantity:
             self.constant,
         )
 
-    def tan(self):  # dead: disable
-        """Calculate the tangent of a ``Quantity``."""
-        return NotImplemented
+    def tan(self):
+        """Calculate the tangent of a ``Quantity``.
 
-    def atan(self):  # dead: disable
-        """Calculate the inverse tangent of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.tan()`` to calculate the tangent and computes the
+        significant figures from the significant figures of the input
+        ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from sigcalc import pi
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> zero = Quantity("0", "3")
+        >>> forty_five = pi / Quantity("4", "3")
+        >>> three_fifteen = pi * Quantity("7", "3") / Quantity("4", "3")
+        >>> zero.tan()
+        Quantity("0.0", "3")
+        >>> forty_five.tan()
+        Quantity("1.0", "3")
+        >>> mpmath.almosteq(mpmath.mpmathify(three_fifteen.tan().value), mpmath.mpmathify(Decimal("-1")), 1e-25)
+        True
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed tangent and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """  # noqa: E501
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.tan(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def atan(self):
+        """Calculate the inverse tangent of a ``Quantity``.
+
+        Uses ``mpmath.atan()`` to calculate the tangent and computes the
+        significant figures from the significant figures of the input
+        ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> a = Quantity("0", "3")
+        >>> b = Quantity("1", "3")
+        >>> c = Quantity("-1", "3")
+        >>> a.atan()
+        Quantity("0.0", "3")
+        >>> b.atan()
+        Quantity("0.7853981633974483096156608458", "3")
+        >>> c.atan()
+        Quantity("-0.7853981633974483096156608458", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse tangent and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.atan(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
     def csc(self):  # dead: disable
         """Calculate the cosecant of a ``Quantity``."""
