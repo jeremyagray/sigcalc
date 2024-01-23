@@ -35,8 +35,7 @@ from hypothesis import strategies as st
 from hypothesis.strategies import composite
 
 from sigcalc import Quantity
-
-pi = Decimal("3.1415926535897932384626433832795028841971")
+from sigcalc import pi
 
 
 @composite
@@ -679,33 +678,87 @@ def test_asin_hypothesis(q, r):
 
 
 @given(quantities(), rounding())
-def test_sine_roundtrip_hypothesis(q, r):
-    """Should roundtrip the sine and inverse sine of ``Quantity`` objects."""
-    assume(q.value >= -pi / 2 and q.value <= pi / 2)
-    e = q.sin().asin()
+def test_asin_of_sin_hypothesis(expected, r):
+    """Should return input."""
+    assume(
+        expected.value >= -pi.value / Decimal("2")
+        and expected.value <= pi.value / Decimal("2")
+    )
+    actual = expected.sin().asin()
 
-    assert mpmath.almosteq(mpmath.mpmathify(q.value), mpmath.mpmathify(q.value))
-    assert q.figures == e.figures
-    assert q.constant == e.constant
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
-    assume(q.value >= -1 and q.value <= 1)
-    e = q.asin().sin()
 
-    assert mpmath.almosteq(mpmath.mpmathify(q.value), mpmath.mpmathify(q.value))
-    assert q.figures == e.figures
-    assert q.constant == e.constant
+@given(quantities(), rounding())
+def test_sin_of_asin_hypothesis(expected, r):
+    """Should return input."""
+    assume(expected.value >= -1 and expected.value <= 1)
+    actual = expected.asin().sin()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())
 def test_cos_hypothesis(q, r):
     """Should calculate the cosine of ``Quantity`` objects."""
-    assert q.cos() == NotImplemented
+    e = q.cos()
+
+    # Duplication; no need to test mpmath.
+    assert (
+        Decimal(mpmath.nstr(mpmath.cos(mpmath.mpmathify(q.value)), mpmath.mp.dps))
+        == e.value
+    )
+    assert q.figures == e.figures
+    assert q.constant == e.constant
 
 
 @given(quantities(), rounding())
 def test_acos_hypothesis(q, r):
     """Should calculate the inverse cosine of ``Quantity`` objects."""
-    assert q.acos() == NotImplemented
+    assume(q.value >= -1 and q.value <= 1)
+    e = q.acos()
+
+    # Duplication; no need to test mpmath.
+    assert (
+        Decimal(mpmath.nstr(mpmath.acos(mpmath.mpmathify(q.value)), mpmath.mp.dps))
+        == e.value
+    )
+    assert q.figures == e.figures
+    assert q.constant == e.constant
+
+
+@given(quantities(), rounding())
+def test_acos_of_cos_hypothesis(expected, r):
+    """Should return input."""
+    assume(expected.value >= Decimal("0") and expected.value <= pi.value)
+    actual = expected.cos().acos()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(quantities(), rounding())
+def test_cos_of_acos_hypothesis(expected, r):
+    """Should return input."""
+    assume(expected.value >= -1 and expected.value <= 1)
+    actual = expected.acos().cos()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())

@@ -589,31 +589,34 @@ class Quantity:
         ``mpmath`` to compute at the required precision of the current
         ``decimal`` context.
 
+        >>> import mpmath
         >>> from sigcalc import Quantity
+        >>> from sigcalc import pi
         >>> from decimal import Decimal
-        >>> pi = Decimal("3.1415926535897932384626433832795028841971")
-        >>> a = Quantity("0", "3")
-        >>> b = Quantity(pi / Decimal("2"), "3")
-        >>> c = Quantity(pi, "3")
-        >>> d = Quantity(Decimal("3") * pi / Decimal("2"), "3")
-        >>> e = Quantity(Decimal("2") * pi, "3")
-        >>> a.sin()
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> zero = Quantity("0", "3")
+        >>> ninety = pi / Quantity("2", "3")
+        >>> one_eighty = pi * Quantity("1", "3")
+        >>> two_seventy = pi * Quantity("3", "3") / Quantity("2", "3")
+        >>> three_sixty = pi * Quantity("2", "3")
+        >>> zero.sin()
         Quantity("0.0", "3")
-        >>> b.sin()
+        >>> ninety.sin()
         Quantity("1.0", "3")
-        >>> c.sin()
-        Quantity("6.929002854045868843477309453889805457857E-41", "3")
-        >>> d.sin()
+        >>> mpmath.almosteq(mpmath.mpmathify(one_eighty.sin().value), mpmath.mpmathify(Decimal("0")), 1e-25)
+        True
+        >>> two_seventy.sin()
         Quantity("-1.0", "3")
-        >>> e.sin()
-        Quantity("-1.3858005708091737686954618907779610915714E-40", "3")
+        >>> mpmath.almosteq(mpmath.mpmathify(three_sixty.sin().value), mpmath.mpmathify(Decimal("0")), 1e-25)
+        True
 
         Returns
         -------
         sigcalc.Quantity
             A new ``Quantity`` with the computed sine and significant
             figures and constant value from the input ``Quantity``.
-        """
+        """  # noqa: E501
         mpmath.mp.dps = getcontext().prec
         return Quantity(
             Decimal(
@@ -634,7 +637,8 @@ class Quantity:
 
         >>> from sigcalc import Quantity
         >>> from decimal import Decimal
-        >>> pi = Decimal("3.1415926535897932384626433832795028841971")
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
         >>> a = Quantity("0", "3")
         >>> b = Quantity("1", "3")
         >>> c = Quantity("-1", "3")
@@ -648,8 +652,9 @@ class Quantity:
         Returns
         -------
         sigcalc.Quantity
-            A new ``Quantity`` with the computed sine and significant
-            figures and constant value from the input ``Quantity``.
+            A new ``Quantity`` with the computed inverse sine and
+            significant figures and constant value from the input
+            ``Quantity``.
         """
         mpmath.mp.dps = getcontext().prec
         return Quantity(
@@ -660,13 +665,90 @@ class Quantity:
             self.constant,
         )
 
-    def cos(self):  # dead: disable
-        """Calculate the cosine of a ``Quantity``."""
-        return NotImplemented
+    def cos(self):
+        """Calculate the cosine of a ``Quantity``.
 
-    def acos(self):  # dead: disable
-        """Calculate the inverse cosine of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.cos()`` to calculate the cosine and computes the
+        significant figures from the significant figures of the input
+        ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from sigcalc import pi
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> zero = Quantity("0", "3")
+        >>> ninety = pi / Quantity("2", "3")
+        >>> one_eighty = pi * Quantity("1", "3")
+        >>> two_seventy = pi * Quantity("3", "3") / Quantity("2", "3")
+        >>> three_sixty = pi * Quantity("2", "3")
+        >>> zero.cos()
+        Quantity("1.0", "3")
+        >>> mpmath.almosteq(mpmath.mpmathify(ninety.cos().value), mpmath.mpmathify(Decimal("0")), 1e-25)
+        True
+        >>> one_eighty.cos()
+        Quantity("-1.0", "3")
+        >>> mpmath.almosteq(mpmath.mpmathify(two_seventy.cos().value), mpmath.mpmathify(Decimal("0")), 1e-25)
+        True
+        >>> three_sixty.cos()
+        Quantity("1.0", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed cosine and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """  # noqa: E501
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.cos(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def acos(self):
+        """Calculate the inverse cosine of a ``Quantity``.
+
+        Uses ``mpmath.acos()`` to calculate the cosine and computes the
+        significant figures from the significant figures of the input
+        ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> a = Quantity("0", "3")
+        >>> b = Quantity("1", "3")
+        >>> c = Quantity("-1", "3")
+        >>> a.acos()
+        Quantity("1.570796326794896619231321692", "3")
+        >>> b.acos()
+        Quantity("0.0", "3")
+        >>> c.acos()
+        Quantity("3.141592653589793238462643383", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse cosine and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.acos(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
     def tan(self):  # dead: disable
         """Calculate the tangent of a ``Quantity``."""
