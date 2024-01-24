@@ -820,13 +820,63 @@ def test_tan_of_atan_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_csc_hypothesis(q, r):
     """Should calculate the cosecant of ``Quantity`` objects."""
-    assert q.csc() == NotImplemented
+    assume(q.value >= -pi.value and q.value <= pi.value)
+    assume(q.value != Decimal("0"))
+
+    actual = q.csc()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.csc(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
 @given(quantities(), rounding())
 def test_acsc_hypothesis(q, r):
     """Should calculate the inverse cosecant of ``Quantity`` objects."""
-    assert q.acsc() == NotImplemented
+    assume(q.value >= Decimal("1") or q.value <= Decimal("-1"))
+
+    actual = q.acsc()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.acsc(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
+
+
+@given(quantities(), rounding())
+def test_acsc_of_csc_hypothesis(expected, r):
+    """Should return input."""
+    assume(
+        expected.value >= -pi.value / Decimal("2")
+        and expected.value <= pi.value / Decimal("2")
+    )
+    assume(expected.value != Decimal("0"))
+
+    actual = expected.csc().acsc()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(quantities(), rounding())
+def test_csc_of_acsc_hypothesis(expected, r):
+    """Should return input."""
+    assume(expected.value <= -1 or expected.value >= 1)
+    actual = expected.acsc().csc()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())

@@ -829,13 +829,79 @@ class Quantity:
             self.constant,
         )
 
-    def csc(self):  # dead: disable
-        """Calculate the cosecant of a ``Quantity``."""
-        return NotImplemented
+    def csc(self):
+        """Calculate the cosecant of a ``Quantity``.
 
-    def acsc(self):  # dead: disable
-        """Calculate the inverse cosecant of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.csc()`` to calculate the cosecant and computes
+        the significant figures from the significant figures of the
+        input ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> import mpmath
+        >>> from sigcalc import Quantity
+        >>> from sigcalc import pi
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> ninety = pi / Quantity("2", "3")
+        >>> two_seventy = pi * Quantity("3", "3") / Quantity("2", "3")
+        >>> ninety.csc()
+        Quantity("1.0", "3")
+        >>> two_seventy.csc()
+        Quantity("-1.0", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed cosecant and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.csc(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def acsc(self):
+        """Calculate the inverse cosecant of a ``Quantity``.
+
+        Uses ``mpmath.acsc()`` to calculate the cosecant and computes
+        the significant figures from the significant figures of the
+        input ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> b = Quantity("1", "3")
+        >>> c = Quantity("-1", "3")
+        >>> b.acsc()
+        Quantity("1.570796326794896619231321692", "3")
+        >>> c.acsc()
+        Quantity("-1.570796326794896619231321692", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse cosecant and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.acsc(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
     def sec(self):  # dead: disable
         """Calculate the secant of a ``Quantity``."""
