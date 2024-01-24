@@ -941,13 +941,61 @@ def test_sec_of_asec_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_cot_hypothesis(q, r):
     """Should calculate the cotangent of ``Quantity`` objects."""
-    assert q.cot() == NotImplemented
+    assume(q.value > Decimal("0") and q.value < pi.value)
+
+    actual = q.cot()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.cot(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
 @given(quantities(), rounding())
 def test_acot_hypothesis(q, r):
     """Should calculate the inverse cotangent of ``Quantity`` objects."""
-    assert q.acot() == NotImplemented
+    e = q.acot()
+
+    # Duplication; no need to test mpmath.
+    assert (
+        Decimal(mpmath.nstr(mpmath.acot(mpmath.mpmathify(q.value)), mpmath.mp.dps))
+        == e.value
+    )
+    assert q.figures == e.figures
+    assert q.constant == e.constant
+
+
+@given(quantities(), rounding())
+def test_acot_of_cot_hypothesis(expected, r):
+    """Should return input."""
+    assume(expected.value > Decimal("0") and expected.value < pi.value)
+    assume(
+        mpmath.acot(mpmath.cot(mpmath.mpmathify(expected.value))) > 0
+        and mpmath.acot(mpmath.cot(mpmath.mpmathify(expected.value)))
+        < mpmath.mpmathify(pi.value)
+    )
+
+    actual = expected.cot().acot()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(quantities(), rounding())
+def test_cot_of_acot_hypothesis(expected, r):
+    """Should return input."""
+    actual = expected.acot().cot()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 # Hyperbolic function tests.
