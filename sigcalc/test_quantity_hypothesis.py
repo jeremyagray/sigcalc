@@ -882,13 +882,60 @@ def test_csc_of_acsc_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_sec_hypothesis(q, r):
     """Should calculate the secant of ``Quantity`` objects."""
-    assert q.sec() == NotImplemented
+    assume(q.value >= Decimal("0") and q.value <= pi.value)
+    assume(q.value != pi.value / Decimal("2"))
+
+    actual = q.sec()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.sec(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
 @given(quantities(), rounding())
 def test_asec_hypothesis(q, r):
     """Should calculate the inverse secant of ``Quantity`` objects."""
-    assert q.asec() == NotImplemented
+    assume(q.value >= Decimal("1") or q.value <= Decimal("-1"))
+
+    actual = q.asec()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.asec(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
+
+
+@given(quantities(), rounding())
+def test_asec_of_sec_hypothesis(expected, r):
+    """Should return input."""
+    assume(expected.value >= Decimal("0") and expected.value <= pi.value)
+    assume(expected.value != pi.value / Decimal("2"))
+
+    actual = expected.sec().asec()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(quantities(), rounding())
+def test_sec_of_asec_hypothesis(expected, r):
+    """Should return input."""
+    assume(expected.value <= -1 or expected.value >= 1)
+    actual = expected.asec().sec()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())
