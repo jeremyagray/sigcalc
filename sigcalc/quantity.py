@@ -979,13 +979,84 @@ class Quantity:
             self.constant,
         )
 
-    def cot(self):  # dead: disable
-        """Calculate the cotangent of a ``Quantity``."""
-        return NotImplemented
+    def cot(self):
+        """Calculate the cotangent of a ``Quantity``.
 
-    def acot(self):  # dead: disable
-        """Calculate the inverse cotangent of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.cot()`` to calculate the cotangent and computes
+        the significant figures from the significant figures of the
+        input ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from sigcalc import pi
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> forty_five = pi / Quantity("4", "3")
+        >>> ninety = pi / Quantity("2", "3")
+        >>> one_thirty_five = pi * Quantity("3", "3") / Quantity("4", "3")
+        >>> forty_five.cot()
+        Quantity("1.0", "3")
+        >>> mpmath.almosteq(mpmath.mpmathify(ninety.cot().value), mpmath.mpmathify(Decimal("0")), 1e-25)
+        True
+        >>> mpmath.almosteq(mpmath.mpmathify(one_thirty_five.cot().value), mpmath.mpmathify(Decimal("-1")), 1e-25)
+        True
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed cotangent and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """  # noqa: E501
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.cot(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def acot(self):
+        """Calculate the inverse cotangent of a ``Quantity``.
+
+        Uses ``mpmath.acot()`` to calculate the cotangent and computes
+        the significant figures from the significant figures of the
+        input ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> a = Quantity("0", "3")
+        >>> b = Quantity("1", "3")
+        >>> c = Quantity("-1", "3")
+        >>> a.acot()
+        Quantity("1.570796326794896619231321692", "3")
+        >>> b.acot()
+        Quantity("0.7853981633974483096156608458", "3")
+        >>> c.acot()
+        Quantity("-0.7853981633974483096156608458", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse cotangent and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.acot(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
     # Hyperbolic functions and inverses.
 
