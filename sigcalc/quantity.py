@@ -903,13 +903,81 @@ class Quantity:
             self.constant,
         )
 
-    def sec(self):  # dead: disable
-        """Calculate the secant of a ``Quantity``."""
-        return NotImplemented
+    def sec(self):
+        """Calculate the secant of a ``Quantity``.
 
-    def asec(self):  # dead: disable
-        """Calculate the inverse secant of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.sec()`` to calculate the secant and computes the
+        significant figures from the significant figures of the input
+        ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from sigcalc import pi
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> zero = Quantity("0", "3")
+        >>> one_eighty = pi * Quantity("1", "3")
+        >>> three_sixty = pi * Quantity("2", "3")
+        >>> zero.sec()
+        Quantity("1.0", "3")
+        >>> one_eighty.sec()
+        Quantity("-1.0", "3")
+        >>> three_sixty.sec()
+        Quantity("1.0", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed secant and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.sec(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def asec(self):
+        """Calculate the inverse secant of a ``Quantity``.
+
+        Uses ``mpmath.asec()`` to calculate the secant and computes
+        the significant figures from the significant figures of the
+        input ``Quantity``.  This wrapper to manages the precision of
+        ``mpmath`` to compute at the required precision of the current
+        ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import Decimal
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> b = Quantity("1", "3")
+        >>> c = Quantity("-1", "3")
+        >>> b.asec()
+        Quantity("0.0", "3")
+        >>> c.asec()
+        Quantity("3.141592653589793238462643383", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse secant and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.asec(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
     def cot(self):  # dead: disable
         """Calculate the cotangent of a ``Quantity``."""
