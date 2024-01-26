@@ -1060,13 +1060,75 @@ class Quantity:
 
     # Hyperbolic functions and inverses.
 
-    def sinh(self):  # dead: disable
-        """Calculate the hyperbolic sine of a ``Quantity``."""
-        return NotImplemented
+    def sinh(self):
+        """Calculate the hyperbolic sine of a ``Quantity``.
 
-    def asinh(self):  # dead: disable
-        """Calculate the inverse hyperbolic sine of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.sinh()`` to calculate the hyperbolic sine and
+        computes the significant figures from the significant figures
+        of the input ``Quantity``.  This wrapper to manages the
+        precision of ``mpmath`` to compute at the required precision
+        of the current ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> Quantity("0", "3").sinh()
+        Quantity("0.0", "3")
+        >>> Quantity("1", "3").sinh()
+        Quantity("1.175201193643801456882381851", "3")
+        >>> Quantity("-1", "3").sinh()
+        Quantity("-1.175201193643801456882381851", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed hyperbolic sine and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.sinh(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def asinh(self):
+        """Calculate the inverse hyperbolic sine of a ``Quantity``.
+
+        Uses ``mpmath.asinh()`` to calculate the hyperbolic sine and
+        computes the significant figures from the significant figures
+        of the input ``Quantity``.  This wrapper to manages the
+        precision of ``mpmath`` to compute at the required precision
+        of the current ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> Quantity("0", "3").asinh()
+        Quantity("0.0", "3")
+        >>> Quantity("1", "3").asinh()
+        Quantity("0.881373587019543025232609325", "3")
+        >>> Quantity("-1", "3").asinh()
+        Quantity("-0.881373587019543025232609325", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse hyperbolic
+            sine and significant figures and constant value from the
+            input ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.asinh(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
     def cosh(self):  # dead: disable
         """Calculate the hyperbolic cosine of a ``Quantity``."""

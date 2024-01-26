@@ -2,7 +2,7 @@
 ..
 .. sigcalc, significant figures calculations
 ..
-.. Copyright 2023 Jeremy A Gray <gray@flyquackswim.com>.
+.. Copyright 2023-2024 Jeremy A Gray <gray@flyquackswim.com>.
 ..
 .. All rights reserved.
 ..
@@ -209,7 +209,7 @@ more information.
 Transcendental Functions
 ........................
 
-The transcendental functions and their inverses will be implemented as
+The transcendental functions and their inverses are implemented as
 wrappers around the appropriate functions from ``mpmath``, calculating
 results based on the ``value`` of a ``Quantity`` combined with the
 correct significant figures, following the "significance in,
@@ -218,7 +218,7 @@ significance out" rule.
 Hyperbolic Functions
 ....................
 
-The hyperbolic functions and their inverses will be implemented as
+The hyperbolic functions and their inverses are implemented as
 wrappers around the appropriate functions from ``mpmath``, calculating
 results based on the ``value`` of a ``Quantity`` combined with the
 correct significant figures, following the "significance in,
