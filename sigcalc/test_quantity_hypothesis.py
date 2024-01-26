@@ -1131,16 +1131,78 @@ def test_cosh_of_acosh_hypothesis(expected, r):
     assert actual.constant == expected.constant
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
 def test_tanh_hypothesis(q, r):
     """Should calculate the hyperbolic tangent of ``Quantity`` objects."""
-    assert q.tanh() == NotImplemented
+    actual = q.tanh()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.tanh(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("-0.99"),
+        max_value=Decimal("0.99"),
+    ),
+    rounding(),
+)
 def test_atanh_hypothesis(q, r):
     """Should calculate the inverse hyperbolic tangent of ``Quantity`` objects."""
-    assert q.atanh() == NotImplemented
+    actual = q.atanh()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.atanh(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
+
+
+@given(
+    quantities(
+        min_value=Decimal("-10"),
+        max_value=Decimal("10"),
+    ),
+    rounding(),
+)
+def test_atanh_of_tanh_hypothesis(expected, r):
+    """Should return input."""
+    actual = expected.tanh().atanh()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(
+    quantities(
+        min_value=Decimal("-1"),
+        max_value=Decimal("1"),
+    ),
+    rounding(),
+)
+def test_tanh_of_atanh_hypothesis(expected, r):
+    """Should return input."""
+    actual = expected.atanh().tanh()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())
