@@ -39,13 +39,15 @@ from sigcalc import pi
 
 
 @composite
-def quantities(draw):
+def quantities(draw, min_value=None, max_value=None):
     """Generate quantities."""
     return Quantity(
         draw(
             st.decimals(
                 allow_nan=False,
                 allow_infinity=False,
+                min_value=min_value,
+                max_value=max_value,
             )
         ),
         draw(
@@ -1055,16 +1057,78 @@ def test_sinh_of_asinh_hypothesis(expected, r):
     assert actual.constant == expected.constant
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
 def test_cosh_hypothesis(q, r):
     """Should calculate the hyperbolic cosine of ``Quantity`` objects."""
-    assert q.cosh() == NotImplemented
+    actual = q.cosh()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.cosh(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("1"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
 def test_acosh_hypothesis(q, r):
     """Should calculate the inverse hyperbolic cosine of ``Quantity`` objects."""
-    assert q.acosh() == NotImplemented
+    actual = q.acosh()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.acosh(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
+
+
+@given(
+    quantities(
+        min_value=Decimal("1"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
+def test_acosh_of_cosh_hypothesis(expected, r):
+    """Should return input."""
+    actual = expected.cosh().acosh()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(
+    quantities(
+        min_value=Decimal("1"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
+def test_cosh_of_acosh_hypothesis(expected, r):
+    """Should return input."""
+    actual = expected.acosh().cosh()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())
