@@ -1200,13 +1200,75 @@ class Quantity:
             self.constant,
         )
 
-    def tanh(self):  # dead: disable
-        """Calculate the hyperbolic tangent of a ``Quantity``."""
-        return NotImplemented
+    def tanh(self):
+        """Calculate the hyperbolic tangent of a ``Quantity``.
 
-    def atanh(self):  # dead: disable
-        """Calculate the inverse tangent of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.tanh()`` to calculate the hyperbolic tangent and
+        computes the significant figures from the significant figures
+        of the input ``Quantity``.  This wrapper to manages the
+        precision of ``mpmath`` to compute at the required precision
+        of the current ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> Quantity("-1", "3").tanh()
+        Quantity("-0.7615941559557648881194582826", "3")
+        >>> Quantity("0", "3").tanh()
+        Quantity("0.0", "3")
+        >>> Quantity("1", "3").tanh()
+        Quantity("0.7615941559557648881194582826", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed hyperbolic tangent
+            and significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.tanh(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def atanh(self):
+        """Calculate the inverse hyperbolic tangent of a ``Quantity``.
+
+        Uses ``mpmath.atanh()`` to calculate the hyperbolic tangent
+        and computes the significant figures from the significant
+        figures of the input ``Quantity``.  This wrapper to manages
+        the precision of ``mpmath`` to compute at the required
+        precision of the current ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> Quantity("-0.5", "3").atanh()
+        Quantity("-0.5493061443340548456976226185", "3")
+        >>> Quantity("0", "3").atanh()
+        Quantity("0.0", "3")
+        >>> Quantity("0.5", "3").atanh()
+        Quantity("0.5493061443340548456976226185", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse hyperbolic
+            tangent and significant figures and constant value from
+            the input ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.atanh(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
     def csch(self):  # dead: disable
         """Calculate the hyperbolic cosecant of a ``Quantity``."""
