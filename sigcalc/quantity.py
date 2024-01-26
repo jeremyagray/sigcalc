@@ -1130,13 +1130,75 @@ class Quantity:
             self.constant,
         )
 
-    def cosh(self):  # dead: disable
-        """Calculate the hyperbolic cosine of a ``Quantity``."""
-        return NotImplemented
+    def cosh(self):
+        """Calculate the hyperbolic cosine of a ``Quantity``.
 
-    def acosh(self):  # dead: disable
-        """Calculate the inverse hyperbolic cosine of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.cosh()`` to calculate the hyperbolic cosine and
+        computes the significant figures from the significant figures
+        of the input ``Quantity``.  This wrapper to manages the
+        precision of ``mpmath`` to compute at the required precision
+        of the current ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> Quantity("0", "3").cosh()
+        Quantity("1.0", "3")
+        >>> Quantity("1", "3").cosh()
+        Quantity("1.543080634815243778477905621", "3")
+        >>> Quantity("-1", "3").cosh()
+        Quantity("1.543080634815243778477905621", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed hyperbolic cosine and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.cosh(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def acosh(self):
+        """Calculate the inverse hyperbolic cosine of a ``Quantity``.
+
+        Uses ``mpmath.acosh()`` to calculate the hyperbolic cosine and
+        computes the significant figures from the significant figures
+        of the input ``Quantity``.  This wrapper to manages the
+        precision of ``mpmath`` to compute at the required precision
+        of the current ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> Quantity("1", "3").acosh()
+        Quantity("0.0", "3")
+        >>> Quantity("2", "3").acosh()
+        Quantity("1.316957896924816708625046347", "3")
+        >>> Quantity("3", "3").acosh()
+        Quantity("1.76274717403908605046521865", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse hyperbolic
+            cosine and significant figures and constant value from the
+            input ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.acosh(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
     def tanh(self):  # dead: disable
         """Calculate the hyperbolic tangent of a ``Quantity``."""
