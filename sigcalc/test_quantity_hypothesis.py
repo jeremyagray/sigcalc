@@ -1002,13 +1002,57 @@ def test_cot_of_acot_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_sinh_hypothesis(q, r):
     """Should calculate the hyperbolic sine of ``Quantity`` objects."""
-    assert q.sinh() == NotImplemented
+    # Avoid decimal overflow/underflow.
+    assume(q.value > Decimal("-1000") and q.value < Decimal("1000"))
+
+    actual = q.sinh()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.sinh(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
 @given(quantities(), rounding())
 def test_asinh_hypothesis(q, r):
     """Should calculate the inverse hyperbolic sine of ``Quantity`` objects."""
-    assert q.asinh() == NotImplemented
+    actual = q.asinh()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.asinh(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
+
+
+@given(quantities(), rounding())
+def test_asinh_of_sinh_hypothesis(expected, r):
+    """Should return input."""
+    # Avoid decimal overflow/underflow.
+    assume(expected.value > Decimal("-1000") and expected.value < Decimal("1000"))
+
+    actual = expected.sinh().asinh()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(quantities(), rounding())
+def test_sinh_of_asinh_hypothesis(expected, r):
+    """Should return input."""
+    actual = expected.asinh().sinh()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())
