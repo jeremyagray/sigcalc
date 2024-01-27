@@ -1205,37 +1205,245 @@ def test_tanh_of_atanh_hypothesis(expected, r):
     assert actual.constant == expected.constant
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
 def test_csch_hypothesis(q, r):
     """Should calculate the hyperbolic cosecant of ``Quantity`` objects."""
-    assert q.csch() == NotImplemented
+    # Singularity.
+    assume(q.value != Decimal("0"))
+
+    actual = q.csch()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.csch(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
 def test_acsch_hypothesis(q, r):
     """Should calculate the inverse hyperbolic cosecant of ``Quantity`` objects."""
-    assert q.acsch() == NotImplemented
+    # Singularity.
+    assume(q.value != Decimal("0"))
+
+    actual = q.acsch()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.acsch(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
+def test_acsch_of_csch_hypothesis(expected, r):
+    """Should return input."""
+    # Singularity.
+    assume(expected.value != Decimal("0"))
+
+    actual = expected.csch().acsch()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
+def test_csch_of_acsch_hypothesis(expected, r):
+    """Should return input."""
+    # Singularity.
+    assume(expected.value != Decimal("0"))
+
+    actual = expected.acsch().csch()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
 def test_sech_hypothesis(q, r):
     """Should calculate the hyperbolic secant of ``Quantity`` objects."""
-    assert q.sech() == NotImplemented
+    actual = q.sech()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.sech(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("0.001"),
+        max_value=Decimal("0.999"),
+    ),
+    rounding(),
+)
 def test_asech_hypothesis(q, r):
     """Should calculate the inverse hyperbolic secant of ``Quantity`` objects."""
-    assert q.asech() == NotImplemented
+    actual = q.asech()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.asech(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("0"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
+def test_asech_of_sech_hypothesis(expected, r):
+    """Should return input."""
+    actual = expected.sech().asech()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(
+    quantities(
+        min_value=Decimal("0.001"),
+        max_value=Decimal("0.999"),
+    ),
+    rounding(),
+)
+def test_sech_of_asech_hypothesis(expected, r):
+    """Should return input."""
+    actual = expected.asech().sech()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
 def test_coth_hypothesis(q, r):
     """Should calculate the hyperbolic cotangent of ``Quantity`` objects."""
-    assert q.coth() == NotImplemented
+    # Singularity.
+    assume(q.value != Decimal("0"))
+
+    actual = q.coth()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.coth(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
 def test_acoth_hypothesis(q, r):
     """Should calculate the inverse hyperbolic cotangent of ``Quantity`` objects."""
-    assert q.acoth() == NotImplemented
+    assume(q.value < Decimal("-1") or q.value > Decimal("1"))
+
+    actual = q.acoth()
+    expected = Quantity(
+        Decimal(mpmath.nstr(mpmath.acoth(mpmath.mpmathify(q.value)), mpmath.mp.dps)),
+        q.figures,
+        constant=q.constant,
+    )
+
+    assert actual == expected
+
+
+@given(
+    quantities(
+        min_value=Decimal("-10"),
+        max_value=Decimal("10"),
+    ),
+    rounding(),
+)
+def test_acoth_of_coth_hypothesis(expected, r):
+    """Should return input."""
+    # Singularity.
+    assume(expected.value != Decimal("0"))
+
+    actual = expected.coth().acoth()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant
+
+
+@given(
+    quantities(
+        min_value=Decimal("-1000"),
+        max_value=Decimal("1000"),
+    ),
+    rounding(),
+)
+def test_coth_of_acoth_hypothesis(expected, r):
+    """Should return input."""
+    assume(expected.value < Decimal("-1") or expected.value > Decimal("1"))
+
+    actual = expected.acoth().coth()
+
+    assert mpmath.almosteq(
+        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
+    )
+    assert actual.figures == expected.figures
+    assert actual.constant == expected.constant

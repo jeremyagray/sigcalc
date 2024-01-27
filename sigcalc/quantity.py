@@ -1270,26 +1270,202 @@ class Quantity:
             self.constant,
         )
 
-    def csch(self):  # dead: disable
-        """Calculate the hyperbolic cosecant of a ``Quantity``."""
-        return NotImplemented
+    def csch(self):
+        """Calculate the hyperbolic cosecant of a ``Quantity``.
 
-    def acsch(self):  # dead: disable
-        """Calculate the inverse hyperbolic cosecant of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.csch()`` to calculate the hyperbolic cosecant
+        and computes the significant figures from the significant
+        figures of the input ``Quantity``.  This wrapper to manages
+        the precision of ``mpmath`` to compute at the required
+        precision of the current ``decimal`` context.
 
-    def sech(self):  # dead: disable
-        """Calculate the hyperbolic secant of a ``Quantity``."""
-        return NotImplemented
+        >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> Quantity("-1", "3").csch()
+        Quantity("-0.8509181282393215451338427633", "3")
+        >>> Quantity("1", "3").csch()
+        Quantity("0.8509181282393215451338427633", "3")
 
-    def asech(self):  # dead: disable
-        """Calculate the inverse hyperbolic secant of a ``Quantity``."""
-        return NotImplemented
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed hyperbolic cosecant
+            and significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.csch(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
 
-    def coth(self):  # dead: disable
-        """Calculate the hyperbolic cotangent of a ``Quantity``."""
-        return NotImplemented
+    def acsch(self):
+        """Calculate the inverse hyperbolic cosecant of a ``Quantity``.
 
-    def acoth(self):  # dead: disable
-        """Calculate the inverse hyperbolic cotangent of a ``Quantity``."""
-        return NotImplemented
+        Uses ``mpmath.acsch()`` to calculate the hyperbolic cosecant
+        and computes the significant figures from the significant
+        figures of the input ``Quantity``.  This wrapper to manages
+        the precision of ``mpmath`` to compute at the required
+        precision of the current ``decimal`` context.
+
+        >>> from sigcalc import Quantity
+        >>> from decimal import getcontext
+        >>> getcontext().prec = 28
+        >>> Quantity("-1", "3").acsch()
+        Quantity("-0.881373587019543025232609325", "3")
+        >>> Quantity("1", "3").acsch()
+        Quantity("0.881373587019543025232609325", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse hyperbolic
+            cosecant and significant figures and constant value from
+            the input ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.acsch(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def sech(self):
+        """Calculate the hyperbolic secant of a ``Quantity``.
+
+        Uses ``mpmath.sech()`` to calculate the hyperbolic secant and
+        computes the significant figures from the significant figures
+        of the input ``Quantity``.  This wrapper to manages the
+        precision of ``mpmath`` to compute at the required precision
+        of the current ``decimal`` context.
+
+        >>> from decimal import getcontext
+        >>> from sigcalc import Quantity
+        >>> getcontext().prec = 28
+        >>> Quantity("-1", "3").sech()
+        Quantity("0.6480542736638853995749773532", "3")
+        >>> Quantity("0", "3").sech()
+        Quantity("1.0", "3")
+        >>> Quantity("1", "3").sech()
+        Quantity("0.6480542736638853995749773532", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed hyperbolic secant and
+            significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.sech(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def asech(self):
+        """Calculate the inverse hyperbolic secant of a ``Quantity``.
+
+        Uses ``mpmath.asech()`` to calculate the hyperbolic secant and
+        computes the significant figures from the significant figures
+        of the input ``Quantity``.  This wrapper to manages the
+        precision of ``mpmath`` to compute at the required precision
+        of the current ``decimal`` context.
+
+        >>> from decimal import getcontext
+        >>> from sigcalc import Quantity
+        >>> getcontext().prec = 28
+        >>> Quantity("0.5", "3").asech()
+        Quantity("1.316957896924816708625046347", "3")
+        >>> Quantity("1", "3").asech()
+        Quantity("0.0", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse hyperbolic
+            secant and significant figures and constant value from the
+            input ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.asech(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def coth(self):
+        """Calculate the hyperbolic cosecant of a ``Quantity``.
+
+        Uses ``mpmath.coth()`` to calculate the hyperbolic cotangent
+        and computes the significant figures from the significant
+        figures of the input ``Quantity``.  This wrapper to manages
+        the precision of ``mpmath`` to compute at the required
+        precision of the current ``decimal`` context.
+
+        >>> from decimal import getcontext
+        >>> from sigcalc import Quantity
+        >>> getcontext().prec = 28
+        >>> Quantity("-1", "3").coth()
+        Quantity("-1.313035285499331303636161247", "3")
+        >>> Quantity("1", "3").coth()
+        Quantity("1.313035285499331303636161247", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed hyperbolic cotangent
+            and significant figures and constant value from the input
+            ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.coth(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )
+
+    def acoth(self):
+        """Calculate the inverse hyperbolic cotangent of a ``Quantity``.
+
+        Uses ``mpmath.acoth()`` to calculate the hyperbolic cotangent
+        and computes the significant figures from the significant
+        figures of the input ``Quantity``.  This wrapper to manages
+        the precision of ``mpmath`` to compute at the required
+        precision of the current ``decimal`` context.
+
+        >>> from decimal import getcontext
+        >>> from sigcalc import Quantity
+        >>> getcontext().prec = 28
+        >>> Quantity("-2", "3").acoth()
+        Quantity("-0.5493061443340548456976226185", "3")
+        >>> Quantity("2", "3").acoth()
+        Quantity("0.5493061443340548456976226185", "3")
+
+        Returns
+        -------
+        sigcalc.Quantity
+            A new ``Quantity`` with the computed inverse hyperbolic
+            cotangent and significant figures and constant value from
+            the input ``Quantity``.
+        """
+        mpmath.mp.dps = getcontext().prec
+        return Quantity(
+            Decimal(
+                mpmath.nstr(mpmath.acoth(mpmath.mpmathify(self.value)), mpmath.mp.dps)
+            ),
+            self.figures,
+            self.constant,
+        )

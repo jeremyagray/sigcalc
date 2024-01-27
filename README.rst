@@ -36,9 +36,10 @@ or with poetry::
 
   poetry add sigcalc
 
-``sigcalc`` depends on the internal ``decimal`` module for arithmetic
-and ``mpmath`` (https://mpmath.org/) for transcendental and other
-functions.
+``sigcalc`` depends on the internal ``decimal``
+`module <https://docs.python.org/3/library/decimal.html>`_
+for arithmetic and `mpmath <https://mpmath.org/>`_ for transcendental
+and other functions.
 
 Usage
 -----
@@ -85,7 +86,7 @@ Quantity("3.14", "3")
 
 Beware that rounding is not performed during calculations and that
 reported significant figures for calculated values are for the
-unrounded value.  For example, a claculation that resulted in a result
+unrounded value.  For example, a calculation that resulted in a result
 of ``Quantity("99.9", "3")`` could round to ``Quantity("100.0",
 "4")``, depending on the current rounding mode.
 
@@ -236,7 +237,16 @@ textbooks, examples of which may be found at:
 3. Myers, R.T.; Tocci, S.; Oldham, K.B., Holt Chemistry, Holt, Rinehart and Winston: 2006.
 4. `"How many significant figures in 0.0" <https://math.stackexchange.com/questions/2149316/>`_
 
-Calculating with significant figures is not a substitute for
+Thanks to the developers of Python's ``decimal``
+`module <https://docs.python.org/3/library/decimal.html>`_,
+the `mpmath <https://mpmath.org/>`_ library, and the
+`hypothesis <https://hypothesis.readthedocs.io/>`_ testing library,
+without which, this would be a much smaller and less functional
+library.
+
+Thanks also to LibreTexts Mathematics for their reference on `hyperbolic functions <https://math.libretexts.org/Courses/Monroe_Community_College/MTH_211_Calculus_II/Chapter_6%3A_Applications_of_Integration/6.9%3A_Calculus_of_the_Hyperbolic_Functions>`_.
+
+Remember, calculating with significant figures is not a substitute for
 repetition of measurements and proper statistical analysis.
 
 Copyright and License
