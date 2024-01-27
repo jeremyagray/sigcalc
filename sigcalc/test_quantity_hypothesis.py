@@ -37,6 +37,17 @@ from hypothesis.strategies import composite
 from sigcalc import Quantity
 from sigcalc import pi
 
+# Reusable decimal constants.
+NegThousand = Decimal("-1000")
+NegTen = Decimal("-10")
+NegOne = Decimal("-1")
+Zero = Decimal("0")
+One = Decimal("1")
+Two = Decimal("2")
+Ten = Decimal("10")
+Hundred = Decimal("100")
+Thousand = Decimal("1000")
+
 
 @composite
 def quantities(draw, min_value=None, max_value=None):
@@ -157,11 +168,30 @@ def test_equality_different_precision_hypothesis(q, r):
     """Should order ``Quantity`` objects."""
     getcontext().rounding = r
     if q.figures == getcontext().prec:
-        p = Quantity(q.value, q.figures - Decimal("1"), False)
+        p = Quantity(q.value, q.figures - One, False)
     else:
-        p = Quantity(q.value, q.figures + Decimal("1"), q.constant)
+        p = Quantity(q.value, q.figures + One, q.constant)
 
     assert q != p
+
+
+@given(quantities(), rounding())
+def test_almost_equal_self_hypothesis(one, r):
+    """Should be almost equal to self."""
+    assert one.almosteq(one)
+
+
+@given(quantities(), quantities(), rounding())
+def test_almost_equal_hypothesis(one, two, r):
+    """Should determine approximate equality."""
+    if one.figures == two.figures:
+        eps = pow(mpmath.mpf("2"), -getcontext().prec + 4)
+        if mpmath.mpmathify(abs(one.value - two.value)) > eps:
+            assert not one.almosteq(two)
+        else:
+            assert one.almosteq(two)
+    else:
+        assert not one.almosteq(two)
 
 
 @given(quantities(), rounding())
@@ -266,14 +296,14 @@ def test_exp_hypothesis(q, r):
     # logic for significance.
 
     # Avoid decimal overflow.
-    assume(q.value < Decimal("1000"))
-    assume(q.value > Decimal("-1000"))
+    assume(q.value < Thousand)
+    assume(q.value > NegThousand)
 
     # Avoid ambiguous zero warning.
-    assume(q.value != Decimal("0"))
+    assume(q.value != Zero)
 
     # Ensure sufficient precision.
-    assume(q.figures > (q.value.adjusted() + Decimal("1")))
+    assume(q.figures > (q.value.adjusted() + One))
 
     getcontext().rounding = r
 
@@ -286,9 +316,9 @@ def test_exp_hypothesis(q, r):
             q.value.exp(),
             constant=q.constant,
         )
-    elif abs(q.value) >= Decimal("1"):
+    elif abs(q.value) >= One:
         # Magnitude of abscissa is greater than one; chop abscissa places.
-        figures = q.figures - (q.value.adjusted() + Decimal("1"))
+        figures = q.figures - (q.value.adjusted() + One)
 
     expected = Quantity(
         q.value.exp(),
@@ -296,16 +326,8 @@ def test_exp_hypothesis(q, r):
         constant=q.constant,
     )
 
-    # Values should be "equal".
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value)
-    )
-
-    # Constant status should not be affected.
+    assert actual.almosteq(expected)
     assert actual.constant == expected.constant
-
-    # Significant figures should be correct.
-    assert actual.figures == expected.figures
 
 
 @given(
@@ -339,14 +361,14 @@ def test_exp_ambiguous_zero_hypothesis(figures, constant, r):
 def test_exp_insufficient_precision_hypothesis(q, r):
     """Should warn on insufficient precision."""
     # Avoid decimal overflow.
-    assume(q.value < Decimal("1000"))
-    assume(q.value > Decimal("-1000"))
+    assume(q.value < Thousand)
+    assume(q.value > NegThousand)
 
     # Avoid ambiguous zero warning.
-    assume(q.value != Decimal("0"))
+    assume(q.value != Zero)
 
     # Ensure insufficient precision.
-    assume(q.figures <= (q.value.adjusted() + Decimal("1")))
+    assume(q.figures <= (q.value.adjusted() + One))
 
     getcontext().rounding = r
 
@@ -355,19 +377,11 @@ def test_exp_insufficient_precision_hypothesis(q, r):
 
     expected = Quantity(
         q.value.exp(),
-        Decimal("0"),
+        Zero,
     )
 
-    # Values should be "equal".
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value)
-    )
-
-    # Constant status should not be affected.
+    assert actual.almosteq(expected)
     assert actual.constant == expected.constant
-
-    # Significant figures should be correct.
-    assert actual.figures == expected.figures
 
 
 @given(quantities(), rounding())
@@ -377,14 +391,14 @@ def test_exp10_hypothesis(q, r):
     # logic for significance.
 
     # Avoid decimal overflow.
-    assume(q.value < Decimal("1000"))
-    assume(q.value > Decimal("-1000"))
+    assume(q.value < Thousand)
+    assume(q.value > NegThousand)
 
     # Avoid ambiguous zero warning.
-    assume(q.value != Decimal("0"))
+    assume(q.value != Zero)
 
     # Ensure sufficient precision.
-    assume(q.figures > (q.value.adjusted() + Decimal("1")))
+    assume(q.figures > (q.value.adjusted() + One))
 
     getcontext().rounding = r
 
@@ -394,29 +408,21 @@ def test_exp10_hypothesis(q, r):
 
     if q.constant:
         expected = Quantity(
-            pow(Decimal("10"), q.value),
+            pow(Ten, q.value),
             constant=q.constant,
         )
-    elif abs(q.value) >= Decimal("1"):
+    elif abs(q.value) >= One:
         # Magnitude of abscissa is greater than one; chop abscissa places.
-        figures = q.figures - (q.value.adjusted() + Decimal("1"))
+        figures = q.figures - (q.value.adjusted() + One)
 
     expected = Quantity(
-        pow(Decimal("10"), q.value),
+        pow(Ten, q.value),
         figures,
         constant=q.constant,
     )
 
-    # Values should be "equal".
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value)
-    )
-
-    # Constant status should not be affected.
+    assert actual.almosteq(expected)
     assert actual.constant == expected.constant
-
-    # Significant figures should be correct.
-    assert actual.figures == expected.figures
 
 
 @given(
@@ -450,14 +456,14 @@ def test_exp10_ambiguous_zero_hypothesis(figures, constant, r):
 def test_exp10_insufficient_precision_hypothesis(q, r):
     """Should warn on insufficient precision."""
     # Avoid decimal overflow.
-    assume(q.value < Decimal("1000"))
-    assume(q.value > Decimal("-1000"))
+    assume(q.value < Thousand)
+    assume(q.value > NegThousand)
 
     # Avoid ambiguous zero warning.
-    assume(q.value != Decimal("0"))
+    assume(q.value != Zero)
 
     # Ensure insufficient precision.
-    assume(q.figures <= (q.value.adjusted() + Decimal("1")))
+    assume(q.figures <= (q.value.adjusted() + One))
 
     getcontext().rounding = r
 
@@ -465,35 +471,27 @@ def test_exp10_insufficient_precision_hypothesis(q, r):
         actual = q.exp10()
 
     expected = Quantity(
-        pow(Decimal("10"), q.value),
-        Decimal("0"),
+        pow(Ten, q.value),
+        Zero,
     )
 
-    # Values should be "equal".
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value)
-    )
-
-    # Constant status should not be affected.
+    assert actual.almosteq(expected)
     assert actual.constant == expected.constant
-
-    # Significant figures should be correct.
-    assert actual.figures == expected.figures
 
 
 @given(quantities(), quantities(), rounding())
 def test_power_hypothesis(base, exp, r):
     """Should calculate powers of ``Quantity`` objects."""
     # Avoid indeterminancy of zeroes.
-    assume(base.value != Decimal("0"))
+    assume(base.value != Zero)
 
     # Avoid overflow/underflow.
-    assume(abs(base.value) < Decimal("1000"))
-    assume(abs(exp.value) < Decimal("100"))
+    assume(abs(base.value) < Thousand)
+    assume(abs(exp.value) < Hundred)
 
     getcontext().rounding = r
 
-    if base.value < Decimal("0") and Decimal(int(exp.value)) != exp.value:
+    if base.value < Zero and Decimal(int(exp.value)) != exp.value:
         with pytest.raises(InvalidOperation):
             actual = pow(base, exp)
     else:
@@ -510,11 +508,7 @@ def test_power_hypothesis(base, exp, r):
                 base.figures,
             )
 
-        assert mpmath.almosteq(
-            mpmath.mpmathify(actual.value),
-            mpmath.mpmathify(expected.value),
-        )
-        assert actual.figures == expected.figures
+        assert actual.almosteq(expected)
         assert actual.constant == expected.constant
 
 
@@ -522,7 +516,7 @@ def test_power_hypothesis(base, exp, r):
 def test_sqrt_hypothesis(q, r):
     """Should calculate the square root of ``Quantity`` objects."""
     # Avoid domain problems.
-    assume(q.value > Decimal("0"))
+    assume(q.value > Zero)
 
     getcontext().rounding = r
     e = q.sqrt()
@@ -537,16 +531,14 @@ def test_sqrt_hypothesis(q, r):
 def test_ln_hypothesis(q, r):
     """Should calculate the natural logarithm of ``Quantity`` objects."""
     # Avoid logarithm domain problems.
-    assume(q.value > Decimal("0"))
+    assume(q.value > Zero)
     assume(not math.isnan(q.value))
 
     getcontext().rounding = r
     actual = q.ln()
 
     # Calculate significant figures.
-    if not q.constant and (
-        abs(q.value) >= Decimal("1").exp() or abs(q.value) <= Decimal("-1").exp()
-    ):
+    if not q.constant and (abs(q.value) >= One.exp() or abs(q.value) <= NegOne.exp()):
         # Include abscissa digits.
         a = q.value.ln().adjusted() + 1
     else:
@@ -559,11 +551,7 @@ def test_ln_hypothesis(q, r):
         q.constant,
     )
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value),
-        mpmath.mpmathify(expected.value),
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected)
     assert actual.constant == expected.constant
 
 
@@ -571,7 +559,7 @@ def test_ln_hypothesis(q, r):
 def test_log10_hypothesis(q, r):
     """Should calculate the base 10 logarithm of ``Quantity`` objects."""
     # Avoid logarithm domain problems.
-    assume(q.value > Decimal("0"))
+    assume(q.value > Zero)
     assume(not math.isnan(q.value))
 
     getcontext().rounding = r
@@ -579,14 +567,12 @@ def test_log10_hypothesis(q, r):
     actual = q.log10()
 
     # Calculate significant figures.
-    if not q.constant and (
-        abs(q.value) >= Decimal("10") or abs(q.value) <= Decimal("0.1")
-    ):
+    if not q.constant and (abs(q.value) >= Ten or abs(q.value) <= Decimal("0.1")):
         # Include abscissa digits.
-        a = q.value.log10().adjusted() + 1
+        a = q.value.log10().adjusted() + One
     else:
         # No abscissa digits.
-        a = 0
+        a = Zero
 
     expected = Quantity(
         q.value.log10(),
@@ -594,11 +580,7 @@ def test_log10_hypothesis(q, r):
         q.constant,
     )
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value),
-        mpmath.mpmathify(expected.value),
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected)
     assert actual.constant == expected.constant
 
 
@@ -607,19 +589,16 @@ def test_log10_hypothesis(q, r):
 def test_ln_exp_hypothesis(expected, mode):
     """Should round trip exponential of natural logarithm."""
     # Avoid logarithm domain problems.
-    assume(expected.value > Decimal("0"))
+    assume(expected.value > Zero)
     # Avoid ambiguous zero.
-    assume(expected.value != Decimal("1"))
+    assume(expected.value != One)
 
     # Set rounding context.
     getcontext().rounding = mode
 
     actual = expected.ln().exp()
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value),
-        mpmath.mpmathify(expected.value),
-    )
-    assert actual.figures == expected.figures
+
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -627,25 +606,21 @@ def test_ln_exp_hypothesis(expected, mode):
 def test_exp_ln_hypothesis(expected, mode):
     """Should round trip natural logarithm of exponential."""
     # Avoid decimal overflow.
-    assume(expected.value < Decimal("1000"))
-    assume(expected.value > Decimal("-1000"))
+    assume(expected.value < Thousand)
+    assume(expected.value > NegThousand)
 
     # Avoid ambiguous zero warning.
-    assume(expected.value != Decimal("0"))
+    assume(expected.value != Zero)
 
     # Ensure sufficient precision.
-    assume(expected.figures > (expected.value.adjusted() + Decimal("1")))
+    assume(expected.figures > (expected.value.adjusted() + One))
 
     # Set rounding context.
     getcontext().rounding = mode
 
     actual = expected.exp().ln()
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value),
-        mpmath.mpmathify(expected.value),
-    )
-    # assert actual.round().figures == expected.figures
-    assert actual.figures == expected.figures
+
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -682,16 +657,10 @@ def test_asin_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_asin_of_sin_hypothesis(expected, r):
     """Should return input."""
-    assume(
-        expected.value >= -pi.value / Decimal("2")
-        and expected.value <= pi.value / Decimal("2")
-    )
+    assume(expected.value >= -pi.value / Two and expected.value <= pi.value / Two)
     actual = expected.sin().asin()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -701,10 +670,7 @@ def test_sin_of_asin_hypothesis(expected, r):
     assume(expected.value >= -1 and expected.value <= 1)
     actual = expected.asin().sin()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -740,13 +706,10 @@ def test_acos_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_acos_of_cos_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value >= Decimal("0") and expected.value <= pi.value)
+    assume(expected.value >= Zero and expected.value <= pi.value)
     actual = expected.cos().acos()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -756,10 +719,7 @@ def test_cos_of_acos_hypothesis(expected, r):
     assume(expected.value >= -1 and expected.value <= 1)
     actual = expected.acos().cos()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -794,16 +754,10 @@ def test_atan_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_atan_of_tan_hypothesis(expected, r):
     """Should return input."""
-    assume(
-        expected.value >= -pi.value / Decimal("2")
-        and expected.value <= pi.value / Decimal("2")
-    )
+    assume(expected.value >= -pi.value / Two and expected.value <= pi.value / Two)
     actual = expected.tan().atan()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -812,10 +766,7 @@ def test_tan_of_atan_hypothesis(expected, r):
     """Should return input."""
     actual = expected.atan().tan()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -823,7 +774,7 @@ def test_tan_of_atan_hypothesis(expected, r):
 def test_csc_hypothesis(q, r):
     """Should calculate the cosecant of ``Quantity`` objects."""
     assume(q.value >= -pi.value and q.value <= pi.value)
-    assume(q.value != Decimal("0"))
+    assume(q.value != Zero)
 
     actual = q.csc()
     expected = Quantity(
@@ -838,7 +789,7 @@ def test_csc_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_acsc_hypothesis(q, r):
     """Should calculate the inverse cosecant of ``Quantity`` objects."""
-    assume(q.value >= Decimal("1") or q.value <= Decimal("-1"))
+    assume(q.value >= One or q.value <= NegOne)
 
     actual = q.acsc()
     expected = Quantity(
@@ -853,18 +804,12 @@ def test_acsc_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_acsc_of_csc_hypothesis(expected, r):
     """Should return input."""
-    assume(
-        expected.value >= -pi.value / Decimal("2")
-        and expected.value <= pi.value / Decimal("2")
-    )
-    assume(expected.value != Decimal("0"))
+    assume(expected.value >= -pi.value / Two and expected.value <= pi.value / Two)
+    assume(expected.value != Zero)
 
     actual = expected.csc().acsc()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -874,18 +819,15 @@ def test_csc_of_acsc_hypothesis(expected, r):
     assume(expected.value <= -1 or expected.value >= 1)
     actual = expected.acsc().csc()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())
 def test_sec_hypothesis(q, r):
     """Should calculate the secant of ``Quantity`` objects."""
-    assume(q.value >= Decimal("0") and q.value <= pi.value)
-    assume(q.value != pi.value / Decimal("2"))
+    assume(q.value >= Zero and q.value <= pi.value)
+    assume(q.value != pi.value / Two)
 
     actual = q.sec()
     expected = Quantity(
@@ -900,7 +842,7 @@ def test_sec_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_asec_hypothesis(q, r):
     """Should calculate the inverse secant of ``Quantity`` objects."""
-    assume(q.value >= Decimal("1") or q.value <= Decimal("-1"))
+    assume(q.value >= One or q.value <= NegOne)
 
     actual = q.asec()
     expected = Quantity(
@@ -915,15 +857,12 @@ def test_asec_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_asec_of_sec_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value >= Decimal("0") and expected.value <= pi.value)
-    assume(expected.value != pi.value / Decimal("2"))
+    assume(expected.value >= Zero and expected.value <= pi.value)
+    assume(expected.value != pi.value / Two)
 
     actual = expected.sec().asec()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -933,17 +872,14 @@ def test_sec_of_asec_hypothesis(expected, r):
     assume(expected.value <= -1 or expected.value >= 1)
     actual = expected.asec().sec()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(quantities(), rounding())
 def test_cot_hypothesis(q, r):
     """Should calculate the cotangent of ``Quantity`` objects."""
-    assume(q.value > Decimal("0") and q.value < pi.value)
+    assume(q.value > Zero and q.value < pi.value)
 
     actual = q.cot()
     expected = Quantity(
@@ -969,10 +905,15 @@ def test_acot_hypothesis(q, r):
     assert q.constant == e.constant
 
 
-@given(quantities(), rounding())
+@given(
+    quantities(
+        min_value=Decimal("0.0000000001"),
+        max_value=pi.value - Decimal("0.0000000001"),
+    ),
+    rounding(),
+)
 def test_acot_of_cot_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value > Decimal("0") and expected.value < pi.value)
     assume(
         mpmath.acot(mpmath.cot(mpmath.mpmathify(expected.value))) > 0
         and mpmath.acot(mpmath.cot(mpmath.mpmathify(expected.value)))
@@ -981,10 +922,7 @@ def test_acot_of_cot_hypothesis(expected, r):
 
     actual = expected.cot().acot()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -993,10 +931,7 @@ def test_cot_of_acot_hypothesis(expected, r):
     """Should return input."""
     actual = expected.acot().cot()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -1005,7 +940,7 @@ def test_cot_of_acot_hypothesis(expected, r):
 def test_sinh_hypothesis(q, r):
     """Should calculate the hyperbolic sine of ``Quantity`` objects."""
     # Avoid decimal overflow/underflow.
-    assume(q.value > Decimal("-1000") and q.value < Decimal("1000"))
+    assume(q.value > NegThousand and q.value < Thousand)
 
     actual = q.sinh()
     expected = Quantity(
@@ -1034,14 +969,11 @@ def test_asinh_hypothesis(q, r):
 def test_asinh_of_sinh_hypothesis(expected, r):
     """Should return input."""
     # Avoid decimal overflow/underflow.
-    assume(expected.value > Decimal("-1000") and expected.value < Decimal("1000"))
+    assume(expected.value > NegThousand and expected.value < Thousand)
 
     actual = expected.sinh().asinh()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
@@ -1050,17 +982,14 @@ def test_sinh_of_asinh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.asinh().sinh()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
@@ -1078,8 +1007,8 @@ def test_cosh_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=Decimal("1"),
-        max_value=Decimal("1000"),
+        min_value=One,
+        max_value=Thousand,
     ),
     rounding(),
 )
@@ -1097,8 +1026,8 @@ def test_acosh_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=Decimal("1"),
-        max_value=Decimal("1000"),
+        min_value=One,
+        max_value=Thousand,
     ),
     rounding(),
 )
@@ -1106,17 +1035,14 @@ def test_acosh_of_cosh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.cosh().acosh()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(
     quantities(
-        min_value=Decimal("1"),
-        max_value=Decimal("1000"),
+        min_value=One,
+        max_value=Thousand,
     ),
     rounding(),
 )
@@ -1124,17 +1050,14 @@ def test_cosh_of_acosh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.acosh().cosh()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
@@ -1171,8 +1094,8 @@ def test_atanh_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=Decimal("-10"),
-        max_value=Decimal("10"),
+        min_value=NegTen,
+        max_value=Ten,
     ),
     rounding(),
 )
@@ -1180,17 +1103,14 @@ def test_atanh_of_tanh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.tanh().atanh()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(
     quantities(
-        min_value=Decimal("-1"),
-        max_value=Decimal("1"),
+        min_value=NegOne,
+        max_value=One,
     ),
     rounding(),
 )
@@ -1198,24 +1118,21 @@ def test_tanh_of_atanh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.atanh().tanh()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
 def test_csch_hypothesis(q, r):
     """Should calculate the hyperbolic cosecant of ``Quantity`` objects."""
     # Singularity.
-    assume(q.value != Decimal("0"))
+    assume(q.value != Zero)
 
     actual = q.csch()
     expected = Quantity(
@@ -1229,15 +1146,15 @@ def test_csch_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
 def test_acsch_hypothesis(q, r):
     """Should calculate the inverse hyperbolic cosecant of ``Quantity`` objects."""
     # Singularity.
-    assume(q.value != Decimal("0"))
+    assume(q.value != Zero)
 
     actual = q.acsch()
     expected = Quantity(
@@ -1251,50 +1168,44 @@ def test_acsch_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
 def test_acsch_of_csch_hypothesis(expected, r):
     """Should return input."""
     # Singularity.
-    assume(expected.value != Decimal("0"))
+    assume(expected.value != Zero)
 
     actual = expected.csch().acsch()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
 def test_csch_of_acsch_hypothesis(expected, r):
     """Should return input."""
     # Singularity.
-    assume(expected.value != Decimal("0"))
+    assume(expected.value != Zero)
 
     actual = expected.acsch().csch()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
@@ -1331,8 +1242,8 @@ def test_asech_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=Decimal("0"),
-        max_value=Decimal("1000"),
+        min_value=Zero,
+        max_value=Thousand,
     ),
     rounding(),
 )
@@ -1340,11 +1251,7 @@ def test_asech_of_sech_hypothesis(expected, r):
     """Should return input."""
     actual = expected.sech().asech()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
-    assert actual.constant == expected.constant
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
 
 
 @given(
@@ -1358,24 +1265,20 @@ def test_sech_of_asech_hypothesis(expected, r):
     """Should return input."""
     actual = expected.asech().sech()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
-    assert actual.constant == expected.constant
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
 
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
 def test_coth_hypothesis(q, r):
     """Should calculate the hyperbolic cotangent of ``Quantity`` objects."""
     # Singularity.
-    assume(q.value != Decimal("0"))
+    assume(q.value != Zero)
 
     actual = q.coth()
     expected = Quantity(
@@ -1389,14 +1292,14 @@ def test_coth_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
 def test_acoth_hypothesis(q, r):
     """Should calculate the inverse hyperbolic cotangent of ``Quantity`` objects."""
-    assume(q.value < Decimal("-1") or q.value > Decimal("1"))
+    assume(q.value < NegOne or q.value > One)
 
     actual = q.acoth()
     expected = Quantity(
@@ -1410,40 +1313,34 @@ def test_acoth_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=Decimal("-10"),
-        max_value=Decimal("10"),
+        min_value=NegTen,
+        max_value=Ten,
     ),
     rounding(),
 )
 def test_acoth_of_coth_hypothesis(expected, r):
     """Should return input."""
     # Singularity.
-    assume(expected.value != Decimal("0"))
+    assume(expected.value != Zero)
 
     actual = expected.coth().acoth()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(actual.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
 
 
 @given(
     quantities(
-        min_value=Decimal("-1000"),
-        max_value=Decimal("1000"),
+        min_value=NegThousand,
+        max_value=Thousand,
     ),
     rounding(),
 )
 def test_coth_of_acoth_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value < Decimal("-1") or expected.value > Decimal("1"))
+    assume(expected.value < NegOne or expected.value > One)
 
     actual = expected.acoth().coth()
 
-    assert mpmath.almosteq(
-        mpmath.mpmathify(expected.value), mpmath.mpmathify(expected.value), 1e-25
-    )
-    assert actual.figures == expected.figures
+    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
     assert actual.constant == expected.constant
