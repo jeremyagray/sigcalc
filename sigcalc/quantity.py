@@ -19,6 +19,11 @@ from warnings import warn
 
 import mpmath
 
+# Reusable decimal constants.
+Zero = Decimal("0")
+One = Decimal("1")
+Ten = Decimal("10")
+
 
 def _most_significant_place(num):
     """Find the most significant place of a number.
@@ -36,8 +41,8 @@ def _most_significant_place(num):
     Decimal
         The exponent of the most significant place.
     """
-    if num == Decimal("0"):
-        return Decimal("0")
+    if num == Zero:
+        return Zero
 
     return Decimal(math.floor(math.log10(abs(num))))
 
@@ -61,7 +66,7 @@ class Quantity:
         if not constant and figures is None:
             raise TypeError("`figures` should not be None for non-constants")
         elif constant:
-            figures = Decimal("1")
+            figures = One
 
         self.value = Decimal(str(value))
 
@@ -292,7 +297,7 @@ class Quantity:
         if self.constant:
             return self.value
 
-        place = self.value.adjusted() - self.figures + Decimal("1")
+        place = self.value.adjusted() - self.figures + One
         return self.value.quantize(Decimal(f"1e{place}"))
 
     def round(self):  # dead: disable
@@ -317,6 +322,47 @@ class Quantity:
             figures += 1
 
         return Quantity(value, figures, self.constant)
+
+    def almosteq(self, other, rel_eps=None, abs_eps=None):
+        """Determine if two ``Quantity`` objects are almost equal.
+
+        Determine if two ``Quantity`` objects are approximately equal.
+        Use ``mpmath.almosteq()`` to determine approximate equality.
+
+        Unlike ``__eq__``, ``self`` and ``other`` are not rounded
+        before checking equality, so ``self`` and ``other`` may differ
+        after rounding.
+
+        Parameters
+        ----------
+        other : sigcalc.Quantity
+            A second ``Quantity`` to compare with ``self``.
+        rel_eps :
+            Passed to ``mpmath.almosteq()`` unmodified.  See the
+            `mpmmath documentation <https://mpmath.org/doc/current/general.html#mpmath.almosteq>`_
+            for details.
+        abs_eps :
+            Passed to ``mpmath.almosteq()`` unmodified.  See the
+            `mpmmath documentation <https://mpmath.org/doc/current/general.html#mpmath.almosteq>`_
+            for details.
+
+        Returns
+        -------
+        bool
+            ``True`` if almost equal, ``False`` otherwise.
+        """  # noqa: E501
+        with mpmath.workdps(getcontext().prec):
+            return all(
+                (
+                    mpmath.almosteq(
+                        mpmath.mpmathify(self.value),
+                        mpmath.mpmathify(other.value),
+                        rel_eps,
+                        abs_eps,
+                    ),
+                    self.figures == other.figures,
+                )
+            )
 
     # Exponential functions.
 
@@ -370,7 +416,7 @@ class Quantity:
             logarithm.
         """  # noqa: E501
         # Warn on zero.
-        if self.value == Decimal("0"):
+        if self.value == Zero:
             warn(f"ambiguous zero valued ``Quantity``:  {repr(self)}", RuntimeWarning)
             return Quantity("1", "0")
 
@@ -387,17 +433,17 @@ class Quantity:
             )
 
         # Chop abscissa places since they are not significant in the logarithm.
-        if abs(self.value) >= Decimal("1"):
-            figures = self.figures - (self.value.adjusted() + Decimal("1"))
+        if abs(self.value) >= One:
+            figures = self.figures - (self.value.adjusted() + One)
 
-        if figures < Decimal("1"):
+        if figures < One:
             warn(
                 f"insufficient input precision in {repr(self)}: "
-                f"the {self.value.adjusted() + Decimal('1')} "
+                f"the {self.value.adjusted() + One} "
                 f"abscissa digits consume the available precision ({self.figures})",
                 RuntimeWarning,
             )
-            figures = Decimal("0")
+            figures = Zero
 
         # No abscissa.
         return Quantity(
@@ -456,11 +502,11 @@ class Quantity:
             logarithm.
         """  # noqa: E501
         # Warn on zero.
-        if self.value == Decimal("0"):
+        if self.value == Zero:
             warn(f"ambiguous zero valued ``Quantity``:  {repr(self)}", RuntimeWarning)
             return Quantity("1", "0")
 
-        value = pow(Decimal("10"), self.value)
+        value = pow(Ten, self.value)
 
         # Default precision for no abscissa.
         figures = self.figures
@@ -473,17 +519,17 @@ class Quantity:
             )
 
         # Chop abscissa places since they are not significant in the logarithm.
-        if abs(self.value) >= Decimal("1"):
-            figures = self.figures - (self.value.adjusted() + Decimal("1"))
+        if abs(self.value) >= One:
+            figures = self.figures - (self.value.adjusted() + One)
 
-        if figures < Decimal("1"):
+        if figures < One:
             warn(
                 f"insufficient input precision in {repr(self)}: "
-                f"the {self.value.adjusted() + Decimal('1')} "
+                f"the {self.value.adjusted() + One} "
                 f"abscissa digits consume the available precision ({self.figures})",
                 RuntimeWarning,
             )
-            figures = Decimal("0")
+            figures = Zero
 
         # No abscissa.
         return Quantity(
@@ -550,9 +596,9 @@ class Quantity:
         value = self.value.ln()
         figures = self.figures
 
-        if abs(value) >= Decimal("1"):
+        if abs(value) >= One:
             # Significant figures includes the abscissa digits.
-            figures += value.adjusted() + Decimal("1")
+            figures += value.adjusted() + One
 
         if self.constant:
             return Quantity(value, constant=self.constant)
@@ -592,9 +638,9 @@ class Quantity:
         value = self.value.log10()
         figures = self.figures
 
-        if abs(value) >= Decimal("1"):
+        if abs(value) >= One:
             # Significant figures includes the abscissa digits.
-            figures += value.adjusted() + Decimal("1")
+            figures += value.adjusted() + One
 
         if self.constant:
             return Quantity(value, constant=self.constant)
