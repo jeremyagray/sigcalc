@@ -115,8 +115,6 @@ classifiers = [
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -128,23 +126,22 @@ packages = [
 
 [tool.poetry.dependencies]
 
-python = ">=3.8.1,<4.0"
-mpmath = "^1"
+python = ">=3.10.1,<4.0"
+mpmath = ">=1,<2"
 
 [tool.poetry.group.dev.dependencies]
 
-Sphinx = "^7"
-black = "^23"
-factory-boy = "^3"
-flake8 = "^6"
-flake8-docstrings = "^1"
-hypothesis = "^6"
-isort = "^5"
-pccc = "^0"
-pre-commit = "^3"
-pytest = "^7"
-pytest-cov = "^4"
-tox = "^4"
+Sphinx = ">=7"
+black = ">=24"
+flake8 = ">=7"
+flake8-docstrings = ">=1"
+hypothesis = ">=6"
+isort = ">=5"
+pccc = ">=0"
+pre-commit = ">=3"
+pytest = ">=8"
+pytest-cov = ">=5"
+tox = ">=4"
 
 [tool.poetry.urls]
 
