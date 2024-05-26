@@ -38,9 +38,6 @@ from sigcalc import Quantity
 from sigcalc import pi
 
 # Reusable decimal constants.
-NegThousand = Decimal("-1000")
-NegTen = Decimal("-10")
-NegOne = Decimal("-1")
 Zero = Decimal("0")
 One = Decimal("1")
 Two = Decimal("2")
@@ -297,7 +294,7 @@ def test_exp_hypothesis(q, r):
 
     # Avoid decimal overflow.
     assume(q.value < Thousand)
-    assume(q.value > NegThousand)
+    assume(q.value > -Thousand)
 
     # Avoid ambiguous zero warning.
     assume(q.value != Zero)
@@ -362,7 +359,7 @@ def test_exp_insufficient_precision_hypothesis(q, r):
     """Should warn on insufficient precision."""
     # Avoid decimal overflow.
     assume(q.value < Thousand)
-    assume(q.value > NegThousand)
+    assume(q.value > -Thousand)
 
     # Avoid ambiguous zero warning.
     assume(q.value != Zero)
@@ -387,12 +384,12 @@ def test_exp_insufficient_precision_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_exp10_hypothesis(q, r):
     """Should calculate the base 10 exponential of ``Quantity`` objects."""
-    # Really need to round-trip with ln, since this repeats the tested
-    # logic for significance.
+    # Really need to round-trip with log10, since this repeats the
+    # tested logic for significance.
 
     # Avoid decimal overflow.
     assume(q.value < Thousand)
-    assume(q.value > NegThousand)
+    assume(q.value > -Thousand)
 
     # Avoid ambiguous zero warning.
     assume(q.value != Zero)
@@ -457,7 +454,7 @@ def test_exp10_insufficient_precision_hypothesis(q, r):
     """Should warn on insufficient precision."""
     # Avoid decimal overflow.
     assume(q.value < Thousand)
-    assume(q.value > NegThousand)
+    assume(q.value > -Thousand)
 
     # Avoid ambiguous zero warning.
     assume(q.value != Zero)
@@ -538,7 +535,7 @@ def test_ln_hypothesis(q, r):
     actual = q.ln()
 
     # Calculate significant figures.
-    if not q.constant and (abs(q.value) >= One.exp() or abs(q.value) <= NegOne.exp()):
+    if not q.constant and (abs(q.value) >= One.exp() or abs(q.value) <= -One.exp()):
         # Include abscissa digits.
         a = q.value.ln().adjusted() + 1
     else:
@@ -607,7 +604,7 @@ def test_exp_ln_hypothesis(expected, mode):
     """Should round trip natural logarithm of exponential."""
     # Avoid decimal overflow.
     assume(expected.value < Thousand)
-    assume(expected.value > NegThousand)
+    assume(expected.value > -Thousand)
 
     # Avoid ambiguous zero warning.
     assume(expected.value != Zero)
@@ -642,7 +639,7 @@ def test_sin_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_asin_hypothesis(q, r):
     """Should calculate the inverse sine of ``Quantity`` objects."""
-    assume(q.value >= -1 and q.value <= 1)
+    assume(q.value >= -One and q.value <= One)
     e = q.asin()
 
     # Duplication; no need to test mpmath.
@@ -667,7 +664,7 @@ def test_asin_of_sin_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_sin_of_asin_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value >= -1 and expected.value <= 1)
+    assume(expected.value >= -One and expected.value <= One)
     actual = expected.asin().sin()
 
     assert actual.almosteq(expected, mpmath.mpf("1e-25"))
@@ -691,7 +688,7 @@ def test_cos_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_acos_hypothesis(q, r):
     """Should calculate the inverse cosine of ``Quantity`` objects."""
-    assume(q.value >= -1 and q.value <= 1)
+    assume(q.value >= -One and q.value <= One)
     e = q.acos()
 
     # Duplication; no need to test mpmath.
@@ -716,7 +713,7 @@ def test_acos_of_cos_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_cos_of_acos_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value >= -1 and expected.value <= 1)
+    assume(expected.value >= -One and expected.value <= One)
     actual = expected.acos().cos()
 
     assert actual.almosteq(expected, mpmath.mpf("1e-25"))
@@ -789,7 +786,7 @@ def test_csc_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_acsc_hypothesis(q, r):
     """Should calculate the inverse cosecant of ``Quantity`` objects."""
-    assume(q.value >= One or q.value <= NegOne)
+    assume(q.value >= One or q.value <= -One)
 
     actual = q.acsc()
     expected = Quantity(
@@ -816,7 +813,7 @@ def test_acsc_of_csc_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_csc_of_acsc_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value <= -1 or expected.value >= 1)
+    assume(expected.value <= -One or expected.value >= One)
     actual = expected.acsc().csc()
 
     assert actual.almosteq(expected, mpmath.mpf("1e-25"))
@@ -842,7 +839,7 @@ def test_sec_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_asec_hypothesis(q, r):
     """Should calculate the inverse secant of ``Quantity`` objects."""
-    assume(q.value >= One or q.value <= NegOne)
+    assume(q.value >= One or q.value <= -One)
 
     actual = q.asec()
     expected = Quantity(
@@ -869,7 +866,7 @@ def test_asec_of_sec_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_sec_of_asec_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value <= -1 or expected.value >= 1)
+    assume(expected.value <= -One or expected.value >= One)
     actual = expected.asec().sec()
 
     assert actual.almosteq(expected, mpmath.mpf("1e-25"))
@@ -940,7 +937,7 @@ def test_cot_of_acot_hypothesis(expected, r):
 def test_sinh_hypothesis(q, r):
     """Should calculate the hyperbolic sine of ``Quantity`` objects."""
     # Avoid decimal overflow/underflow.
-    assume(q.value > NegThousand and q.value < Thousand)
+    assume(q.value > -Thousand and q.value < Thousand)
 
     actual = q.sinh()
     expected = Quantity(
@@ -969,7 +966,7 @@ def test_asinh_hypothesis(q, r):
 def test_asinh_of_sinh_hypothesis(expected, r):
     """Should return input."""
     # Avoid decimal overflow/underflow.
-    assume(expected.value > NegThousand and expected.value < Thousand)
+    assume(expected.value > -Thousand and expected.value < Thousand)
 
     actual = expected.sinh().asinh()
 
@@ -988,7 +985,7 @@ def test_sinh_of_asinh_hypothesis(expected, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
@@ -1056,7 +1053,7 @@ def test_cosh_of_acosh_hypothesis(expected, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
@@ -1094,7 +1091,7 @@ def test_atanh_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=NegTen,
+        min_value=-Ten,
         max_value=Ten,
     ),
     rounding(),
@@ -1109,7 +1106,7 @@ def test_atanh_of_tanh_hypothesis(expected, r):
 
 @given(
     quantities(
-        min_value=NegOne,
+        min_value=-One,
         max_value=One,
     ),
     rounding(),
@@ -1124,7 +1121,7 @@ def test_tanh_of_atanh_hypothesis(expected, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
@@ -1146,7 +1143,7 @@ def test_csch_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
@@ -1168,7 +1165,7 @@ def test_acsch_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
@@ -1186,7 +1183,7 @@ def test_acsch_of_csch_hypothesis(expected, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
@@ -1204,7 +1201,7 @@ def test_csch_of_acsch_hypothesis(expected, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
@@ -1270,7 +1267,7 @@ def test_sech_of_asech_hypothesis(expected, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
@@ -1292,14 +1289,14 @@ def test_coth_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
 )
 def test_acoth_hypothesis(q, r):
     """Should calculate the inverse hyperbolic cotangent of ``Quantity`` objects."""
-    assume(q.value < NegOne or q.value > One)
+    assume(q.value < -One or q.value > One)
 
     actual = q.acoth()
     expected = Quantity(
@@ -1313,7 +1310,7 @@ def test_acoth_hypothesis(q, r):
 
 @given(
     quantities(
-        min_value=NegTen,
+        min_value=-Ten,
         max_value=Ten,
     ),
     rounding(),
@@ -1331,14 +1328,14 @@ def test_acoth_of_coth_hypothesis(expected, r):
 
 @given(
     quantities(
-        min_value=NegThousand,
+        min_value=-Thousand,
         max_value=Thousand,
     ),
     rounding(),
 )
 def test_coth_of_acoth_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value < NegOne or expected.value > One)
+    assume(expected.value < -One or expected.value > One)
 
     actual = expected.acoth().coth()
 

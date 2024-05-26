@@ -32,6 +32,14 @@ from sigcalc import Quantity
 default_rounding = ROUND_HALF_EVEN
 default_prec = 28
 
+# Reusable decimal constants.
+Zero = Decimal("0")
+One = Decimal("1")
+Two = Decimal("2")
+Ten = Decimal("10")
+Hundred = Decimal("100")
+Thousand = Decimal("1000")
+
 
 # Output operations tests.
 def test___repr__():
@@ -42,6 +50,7 @@ def test___repr__():
 
     q = Quantity("3.14", "3")
     assert repr(q) == f'Quantity("{str(q.value)}", "{str(q.figures)}")'
+
     q = Quantity("3.14", "3", constant=True)
     assert repr(q) == f'Quantity("{str(q.value)}", "{str(q.figures)}", constant=True)'
 
@@ -77,7 +86,7 @@ def test___format__():
 
 
 @pytest.mark.parametrize(
-    "mode, value, figures, output",
+    "mode, value, figures, expected",
     [
         (ROUND_05UP, "31.4", "1", "3E+1"),
         (ROUND_CEILING, "31.4", "1", "4E+1"),
@@ -157,12 +166,13 @@ def test___format__():
         (ROUND_05UP, "-3.151", "3", "-3.16"),
     ],
 )
-def test___str__(mode, value, figures, output):
+def test___str__(mode, value, figures, expected):
     """Should stringify a ``Quantity`` object."""
     # Test in a local context since the rounding modes are changing.
     with localcontext() as ctx:
         ctx.rounding = mode
-        assert str(Quantity(value, figures)) == output
+        actual = str(Quantity(value, figures))
+        assert actual == expected
 
 
 def test__round_constants():
@@ -187,65 +197,131 @@ def test_round_constants():
 
 def test_round():
     """Should round a ``Quantity`` object."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
+    actual = Quantity("3.14", "2").round()
+    expected = Quantity("3.1", "2")
 
-    q = Quantity("3.14", "2")
-    assert q.round() == Quantity("3.1", "2")
+    assert actual == expected
 
 
 # Unary operations tests.
-def test_abs():
+@pytest.mark.parametrize(
+    "quantity, expected",
+    [
+        (
+            Quantity("3.14", "3"),
+            Quantity("3.14", "3"),
+        ),
+        (
+            Quantity("-3.14", "3"),
+            Quantity("3.14", "3"),
+        ),
+        (
+            Quantity("+3.14", "3"),
+            Quantity("3.14", "3"),
+        ),
+        (
+            Quantity("0", "3"),
+            Quantity("0", "3"),
+        ),
+        (
+            Quantity("-0", "3"),
+            Quantity("0", "3"),
+        ),
+        (
+            Quantity("+0", "3"),
+            Quantity("0", "3"),
+        ),
+        # Constants.
+        (
+            Quantity("3.14", "3", constant=True),
+            Quantity("3.14", "3", constant=True),
+        ),
+    ],
+)
+def test_abs(quantity, expected):
     """Should return the absolute value of a ``Quantity`` object."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
-    assert abs(Quantity("3.14", "3")) == Quantity("3.14", "3")
-    assert abs(Quantity("-3.14", "3")) == Quantity("3.14", "3")
-    assert abs(Quantity("+3.14", "3")) == Quantity("3.14", "3")
-    assert abs(Quantity("0", "3")) == Quantity("0", "3")
-    assert abs(Quantity("-0", "3")) == Quantity("0", "3")
-    assert abs(Quantity("+0", "3")) == Quantity("0", "3")
-    # Constants.
-    assert abs(Quantity("3.14", "3", constant=True)) == Quantity(
-        "3.14", "3", constant=True
-    )
+    actual = abs(quantity)
+    assert actual == expected
 
 
-def test_neg():
+@pytest.mark.parametrize(
+    "quantity, expected",
+    [
+        (
+            Quantity("3.14", "3"),
+            Quantity("-3.14", "3"),
+        ),
+        (
+            Quantity("-3.14", "3"),
+            Quantity("3.14", "3"),
+        ),
+        (
+            Quantity("+3.14", "3"),
+            Quantity("-3.14", "3"),
+        ),
+        (
+            Quantity("0", "3"),
+            Quantity("0", "3"),
+        ),
+        (
+            Quantity("-0", "3"),
+            Quantity("0", "3"),
+        ),
+        (
+            Quantity("+0", "3"),
+            Quantity("0", "3"),
+        ),
+        # Constants.
+        (
+            Quantity("3.14", "3", constant=True),
+            Quantity("-3.14", "3", constant=True),
+        ),
+    ],
+)
+def test_neg(quantity, expected):
     """Should return the negation of a ``Quantity`` object."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
-    assert -Quantity("3.14", "3") == Quantity("-3.14", "3")
-    assert -Quantity("-3.14", "3") == Quantity("3.14", "3")
-    assert -Quantity("+3.14", "3") == Quantity("-3.14", "3")
-    assert -Quantity("0", "3") == Quantity("-0", "3")
-    assert -Quantity("-0", "3") == Quantity("0", "3")
-    assert -Quantity("+0", "3") == Quantity("0", "3")
-    # Constants.
-    assert -Quantity("3.14", "3", constant=True) == Quantity(
-        "-3.14", "3", constant=True
-    )
+    actual = -quantity
+    assert actual == expected
 
 
-def test_pos():
+@pytest.mark.parametrize(
+    "quantity, expected",
+    [
+        (
+            Quantity("3.14", "3"),
+            Quantity("3.14", "3"),
+        ),
+        (
+            Quantity("-3.14", "3"),
+            Quantity("-3.14", "3"),
+        ),
+        (
+            Quantity("+3.14", "3"),
+            Quantity("3.14", "3"),
+        ),
+        (
+            Quantity("0", "3"),
+            Quantity("0", "3"),
+        ),
+        (
+            Quantity("-0", "3"),
+            Quantity("0", "3"),
+        ),
+        (
+            Quantity("+0", "3"),
+            Quantity("0", "3"),
+        ),
+        # Constants.
+        (
+            Quantity("3.14", "3", constant=True),
+            Quantity("3.14", "3", constant=True),
+        ),
+    ],
+)
+def test_pos(quantity, expected):
     """Should return the positive of a ``Quantity`` object."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
-    assert +Quantity("3.14", "3") == Quantity("3.14", "3")
-    assert +Quantity("-3.14", "3") == Quantity("-3.14", "3")
-    assert +Quantity("+3.14", "3") == Quantity("3.14", "3")
-    assert +Quantity("0", "3") == Quantity("0", "3")
-    assert +Quantity("-0", "3") == Quantity("0", "3")
-    assert +Quantity("+0", "3") == Quantity("0", "3")
-    # Constants.
-    assert +Quantity("3.14", "3", constant=True) == Quantity("3.14", "3", constant=True)
+    actual = +quantity
+    assert actual == expected
 
 
 # Comparisons tests.
@@ -257,6 +333,7 @@ def test___lt__():
 
     # Lesser value.
     assert Quantity("3.14", "3") < Quantity("3.15", "3")
+
     # Significance is irrelevant.
     assert Quantity("3.14", "3") < Quantity("3.15", "5")
     assert Quantity("3.14", "5") < Quantity("3.15", "3")
@@ -264,6 +341,7 @@ def test___lt__():
 
     # Greater value.
     assert not Quantity("3.15", "3") < Quantity("3.14", "3")
+
     # Significance is irrelevant.
     assert not Quantity("3.15", "3") < Quantity("3.14", "5")
     assert not Quantity("3.15", "5") < Quantity("3.14", "3")
@@ -278,16 +356,20 @@ def test___le__():
 
     # Lesser value.
     assert Quantity("3.14", "3") <= Quantity("3.15", "3")
+
     # Significance is irrelevant.
     assert Quantity("3.14", "3") <= Quantity("3.15", "5")
     assert Quantity("3.14", "5") <= Quantity("3.15", "3")
     assert Quantity("3.14", "5") <= Quantity("3.15", "3", constant=True)
+
     # Equal values.
     assert Quantity("3.14", "3") <= Quantity("3.14", "3")
     assert Quantity("3.140", "3") <= Quantity("3.14", "3")
     assert Quantity("3.14", "3") <= Quantity("3.140", "3")
+
     # Equal values after rounding.
     assert Quantity("3.137", "3") <= Quantity("3.136", "3")
+
     # Constants.
     assert Quantity("3.14", "3", constant=True) <= Quantity("3.14", "5", constant=True)
 
@@ -302,8 +384,10 @@ def test___eq__():
     assert Quantity("3.14", "3") == Quantity("3.14", "3")
     assert Quantity("3.140", "3") == Quantity("3.14", "3")
     assert Quantity("3.14", "3") == Quantity("3.140", "3")
+
     # Equal values after rounding.
     assert Quantity("3.138", "3") == Quantity("3.141", "3")
+
     # Constants.
     assert Quantity("3.14", "3", constant=True) == Quantity("3.14", "5", constant=True)
     assert Quantity("3.14", getcontext().prec) == Quantity("3.14", "5", constant=True)
@@ -318,6 +402,7 @@ def test___ne__():
     # Different significance.
     assert Quantity("3.14", "3") != Quantity("3.14", "2")
     assert Quantity("3.14", "3") != Quantity("3.14", "4")
+
     # Different significance and values.
     assert Quantity("3.14", "3") != Quantity("3.15", "2")
     assert Quantity("3.14", "3") != Quantity("3.15", "3")
@@ -325,6 +410,7 @@ def test___ne__():
     assert Quantity("3.14", "3") != Quantity("3.13", "2")
     assert Quantity("3.14", "3") != Quantity("3.13", "3")
     assert Quantity("3.14", "3") != Quantity("3.13", "4")
+
     # Constants.
     assert Quantity("3.14", "3", constant=True) != Quantity("3.14", "3")
     assert Quantity("3.14", "3") != Quantity("3.14", "3", constant=True)
@@ -338,6 +424,7 @@ def test___gt__():
 
     # Greater value.
     assert Quantity("3.15", "3") > Quantity("3.14", "3")
+
     # Significance is irrelevant.
     assert Quantity("3.15", "3") > Quantity("3.14", "5")
     assert Quantity("3.15", "5") > Quantity("3.14", "3")
@@ -352,197 +439,388 @@ def test___ge__():
 
     # Greater value.
     assert Quantity("3.15", "3") >= Quantity("3.14", "3")
+
     # Significance is irrelevant.
     assert Quantity("3.15", "3") >= Quantity("3.14", "5")
     assert Quantity("3.15", "5") >= Quantity("3.14", "3")
     assert Quantity("3.15", "5") >= Quantity("3.14", "3", constant=True)
+
     # Equal values.
     assert Quantity("3.14", "3") >= Quantity("3.14", "3")
     assert Quantity("3.140", "3") >= Quantity("3.14", "3")
     assert Quantity("3.14", "3") >= Quantity("3.140", "3")
+
     # Equal values after rounding.
     assert Quantity("3.136", "3") >= Quantity("3.137", "3")
+
     # Constants.
     assert Quantity("3.14", "3", constant=True) >= Quantity("3.14", "5", constant=True)
 
 
 # Arithmetic operations tests.
-def test_add():
+@pytest.mark.parametrize(
+    "one, two, expected",
+    [
+        (
+            Quantity("3.14", "3"),
+            Quantity("2.72", "3"),
+            Quantity("5.86", "3"),
+        ),
+        (
+            Quantity("3.14", "3"),
+            Quantity("0.272", "3"),
+            Quantity("3.412", "3"),
+        ),
+        (
+            Quantity("100", "1"),
+            Quantity("0.001", "1"),
+            Quantity("100.001", "1"),
+        ),
+        (
+            Quantity("100", "3"),
+            Quantity("0.001", "1"),
+            Quantity("100.001", "3"),
+        ),
+        (
+            Quantity("100.0", "4"),
+            Quantity("0.001", "1"),
+            Quantity("100.001", "4"),
+        ),
+        # Exponents.
+        (
+            Quantity("3.14e-8", "3"),
+            Quantity("2.72e-8", "3"),
+            Quantity("5.86e-8", "3"),
+        ),
+        (
+            Quantity("3.14e8", "3"),
+            Quantity("2.72e8", "3"),
+            Quantity("5.86e8", "3"),
+        ),
+        # Constants.
+        (
+            Quantity("3.1415", "5"),
+            Quantity("2.72", "3", constant=True),
+            Quantity("5.8615", "5"),
+        ),
+        (
+            Quantity("3.1415", "5", constant=True),
+            Quantity("2.72", "3"),
+            Quantity("5.8615", "3"),
+        ),
+        (
+            Quantity("3.1415", "5", constant=True),
+            Quantity("2.72", "3", constant=True),
+            Quantity("5.8615", "5", constant=True),
+        ),
+    ],
+)
+def test_add(one, two, expected):
     """Quantities should add."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
-    assert Quantity("3.14", "3") + Quantity("2.72", "3") == Quantity("5.86", "3")
-    assert Quantity("3.14", "3") + Quantity("0.272", "3") == Quantity("3.412", "3")
-    assert Quantity("100", "1") + Quantity("0.001", "1") == Quantity("100.001", "1")
-    assert Quantity("100", "3") + Quantity("0.001", "1") == Quantity("100.001", "3")
-    assert Quantity("100.0", "4") + Quantity("0.001", "1") == Quantity("100.001", "4")
-    # Exponents.
-    assert Quantity("3.14e-8", "3") + Quantity("2.72e-8", "3") == Quantity(
-        "5.86e-8", "3"
-    )
-    assert Quantity("3.14e8", "3") + Quantity("2.72e8", "3") == Quantity("5.86e8", "3")
-    # Constants.
-    assert Quantity("3.1415", "5") + Quantity("2.72", "3", constant=True) == Quantity(
-        "5.8615", "5"
-    )
-    assert Quantity("3.1415", "5", constant=True) + Quantity("2.72", "3") == Quantity(
-        "5.8615", "3"
-    )
-    assert Quantity("3.1415", "5", constant=True) + Quantity(
-        "2.72", "3", constant=True
-    ) == Quantity("5.8615", "5", constant=True)
+    actual = one + two
+    assert actual == expected
 
 
-def test_add_bad_types():
+@pytest.mark.parametrize(
+    "one, two",
+    [
+        (
+            Quantity("3.14", "3"),
+            3,
+        ),
+        (
+            3,
+            Quantity("3.14", "3"),
+        ),
+    ],
+)
+def test_add_bad_types(one, two):
     """Only quantities should add."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
     with pytest.raises(TypeError):
-        Quantity("3.14", "3") + 3
-    with pytest.raises(TypeError):
-        3 + Quantity("3.14", "3")
+        one + two
 
 
-def test_sub():
+@pytest.mark.parametrize(
+    "one, two, expected",
+    [
+        # Easy.
+        (
+            Quantity("3.14", "3"),
+            Quantity("1.72", "3"),
+            Quantity("1.42", "3"),
+        ),
+        # Loss of precision.
+        (
+            Quantity("3.14", "3"),
+            Quantity("2.72", "3"),
+            Quantity("0.42", "2"),
+        ),
+        # First subtrahend more precise.
+        (
+            Quantity("3.1415", "5"),
+            Quantity("2.72", "3"),
+            Quantity("0.4215", "2"),
+        ),
+        (
+            Quantity("3.1415", "5"),
+            Quantity("0.272", "3"),
+            Quantity("2.8695", "4"),
+        ),
+        # Second subtrahend more precise.
+        (
+            Quantity("3.14", "3"),
+            Quantity("0.272", "3"),
+            Quantity("2.868", "3"),
+        ),
+        # No overlap between subtrahends.
+        (
+            Quantity("3.14", "3"),
+            Quantity("0.00272", "3"),
+            Quantity("3.13728", "3"),
+        ),
+        # Rounding regains precision.
+        (
+            Quantity("100", "1"),
+            Quantity("0.001", "1"),
+            Quantity("99.999", "1"),
+        ),
+        (
+            Quantity("100", "1"),
+            Quantity("0.005", "1"),
+            Quantity("99.995", "1"),
+        ),
+        (
+            Quantity("100", "1"),
+            Quantity("0.006", "1"),
+            Quantity("99.994", "1"),
+        ),
+        (
+            Quantity("100.0", "4"),
+            Quantity("0.001", "1"),
+            Quantity("99.999", "3"),
+        ),
+        # Constants.
+        (
+            Quantity("3.1415", "5"),
+            Quantity("1.12", "3", constant=True),
+            Quantity("2.0215", "5"),
+        ),
+        (
+            Quantity("3.1415", "5", constant=True),
+            Quantity("1.12", "3"),
+            Quantity("2.0215", "3"),
+        ),
+        (
+            Quantity("3.1415", "5", constant=True),
+            Quantity("1.12", "3", constant=True),
+            Quantity("2.0215", "4", constant=True),
+        ),
+        (
+            Quantity("3.1415", "5"),
+            Quantity("2.72", "3", constant=True),
+            Quantity("0.4215", "4"),
+        ),
+        (
+            Quantity("3.1415", "5", constant=True),
+            Quantity("2.72", "3"),
+            Quantity("0.4215", "2"),
+        ),
+        (
+            Quantity("3.1415", "5", constant=True),
+            Quantity("2.72", "3", constant=True),
+            Quantity("0.4215", "4", constant=True),
+        ),
+    ],
+)
+def test_sub(one, two, expected):
     """Quantities should subtract."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
-    # Easy.
-    assert Quantity("3.14", "3") - Quantity("1.72", "3") == Quantity("1.42", "3")
-    # Loss of precision.
-    assert Quantity("3.14", "3") - Quantity("2.72", "3") == Quantity("0.42", "2")
-    # First subtrahend more precise.
-    assert Quantity("3.1415", "5") - Quantity("2.72", "3") == Quantity("0.4215", "2")
-    assert Quantity("3.1415", "5") - Quantity("0.272", "3") == Quantity("2.8695", "4")
-    # Second subtrahend more precise.
-    assert Quantity("3.14", "3") - Quantity("0.272", "3") == Quantity("2.868", "3")
-    # No overlap between subtrahends.
-    assert Quantity("3.14", "3") - Quantity("0.00272", "3") == Quantity("3.13728", "3")
-    # Rounding regains precision.
-    assert Quantity("100", "1") - Quantity("0.001", "1") == Quantity("99.999", "1")
-    assert Quantity("100", "1") - Quantity("0.005", "1") == Quantity("99.995", "1")
-    assert Quantity("100", "1") - Quantity("0.006", "1") == Quantity("99.994", "1")
-    assert Quantity("100.0", "4") - Quantity("0.001", "1") == Quantity("99.999", "3")
-    # Constants.
-    assert Quantity("3.1415", "5") - Quantity("1.12", "3", constant=True) == Quantity(
-        "2.0215", "5"
-    )
-    assert Quantity("3.1415", "5", constant=True) - Quantity("1.12", "3") == Quantity(
-        "2.0215", "3"
-    )
-    assert Quantity("3.1415", "5", constant=True) - Quantity(
-        "1.12", "3", constant=True
-    ) == Quantity("2.0215", "4", constant=True)
-    assert Quantity("3.1415", "5") - Quantity("2.72", "3", constant=True) == Quantity(
-        "0.4215", "4"
-    )
-    assert Quantity("3.1415", "5", constant=True) - Quantity("2.72", "3") == Quantity(
-        "0.4215", "2"
-    )
-    assert Quantity("3.1415", "5", constant=True) - Quantity(
-        "2.72", "3", constant=True
-    ) == Quantity("0.4215", "4", constant=True)
+    actual = one - two
+    assert actual == expected
 
 
-def test_sub_bad_types():
+@pytest.mark.parametrize(
+    "one, two",
+    [
+        (
+            Quantity("3.14", "3"),
+            3,
+        ),
+        (
+            3,
+            Quantity("3.14", "3"),
+        ),
+    ],
+)
+def test_sub_bad_types(one, two):
     """Only quantities should subtract."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
     with pytest.raises(TypeError):
-        Quantity("3.14", "3") - 3
-    with pytest.raises(TypeError):
-        3 - Quantity("3.14", "3")
+        one - two
 
 
-def test_mult():
+@pytest.mark.parametrize(
+    "one, two, expected",
+    [
+        (
+            Quantity("3.14", "3"),
+            Quantity("2.72", "3"),
+            Quantity("8.5408", "3"),
+        ),
+        (
+            Quantity("3.14", "3"),
+            Quantity("0.272", "3"),
+            Quantity("0.85408", "3"),
+        ),
+        (
+            Quantity("3.14", "3"),
+            Quantity("0.0272", "3"),
+            Quantity("0.085408", "3"),
+        ),
+        (
+            Quantity("314", "3"),
+            Quantity("272", "3"),
+            Quantity("85408", "3"),
+        ),
+        (
+            Quantity("3140", "3"),
+            Quantity("2720", "3"),
+            Quantity("8540800", "3"),
+        ),
+        (
+            Quantity("0.00314", "3"),
+            Quantity("0.00272", "3"),
+            Quantity("0.0000085408", "3"),
+        ),
+        # Constants.
+        (
+            Quantity("3.1415", "5"),
+            Quantity("2.72", "3", constant=True),
+            Quantity("8.54488", "5"),
+        ),
+        (
+            Quantity("2.72", "3", constant=True),
+            Quantity("3.1415", "5"),
+            Quantity("8.54488", "5"),
+        ),
+        (
+            Quantity("2.72", "3", constant=True),
+            Quantity("3.1415", "5", constant=True),
+            Quantity("8.54488", "5", constant=True),
+        ),
+    ],
+)
+def test_mult(one, two, expected):
     """Quantities should multiply."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
-    # 3.14 * 2.72 = 8.5408
-    assert Quantity("3.14", "3") * Quantity("2.72", "3") == Quantity("8.5408", "3")
-    assert Quantity("3.14", "3") * Quantity("0.272", "3") == Quantity("0.85408", "3")
-    assert Quantity("3.14", "3") * Quantity("0.0272", "3") == Quantity("0.085408", "3")
-    assert Quantity("314", "3") * Quantity("272", "3") == Quantity("85408", "3")
-    assert Quantity("3140", "3") * Quantity("2720", "3") == Quantity("8540800", "3")
-    assert Quantity("0.00314", "3") * Quantity("0.00272", "3") == Quantity(
-        "0.0000085408", "3"
-    )
-    # Constants.
-    assert Quantity("3.1415", "5") * Quantity("2.72", "3", constant=True) == Quantity(
-        "8.54488", "5"
-    )
-    assert Quantity("2.72", "3", constant=True) * Quantity("3.1415", "5") == Quantity(
-        "8.54488", "5"
-    )
-    assert Quantity("2.72", "3", constant=True) * Quantity(
-        "3.1415", "5", constant=True
-    ) == Quantity("8.54488", "5", constant=True)
+    actual = one * two
+    assert actual == expected
 
 
-def test_mul_bad_types():
+@pytest.mark.parametrize(
+    "one, two",
+    [
+        (
+            Quantity("3.14", "3"),
+            3,
+        ),
+        (
+            3,
+            Quantity("3.14", "3"),
+        ),
+    ],
+)
+def test_mul_bad_types(one, two):
     """Only quantities should multiply."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
     with pytest.raises(TypeError):
-        Quantity("3.14", "3") * 3
-    with pytest.raises(TypeError):
-        3 * Quantity("3.14", "3")
+        one * two
 
 
-def test_div():
+@pytest.mark.parametrize(
+    "num, den, expected",
+    [
+        (
+            Quantity("8.5408", "3"),
+            Quantity("2.72", "3"),
+            Quantity("3.14", "3"),
+        ),
+        (
+            Quantity("8.5408", "3"),
+            Quantity("0.272", "3"),
+            Quantity("31.4", "3"),
+        ),
+        (
+            Quantity("8.5408", "3"),
+            Quantity("0.0272", "3"),
+            Quantity("314", "3"),
+        ),
+        (
+            Quantity("85408", "3"),
+            Quantity("272", "3"),
+            Quantity("314", "3"),
+        ),
+        (
+            Quantity("854080", "3"),
+            Quantity("2720", "3"),
+            Quantity("314", "3"),
+        ),
+        (
+            Quantity("0.0085408", "3"),
+            Quantity("0.00272", "3"),
+            Quantity("3.14", "3"),
+        ),
+        (
+            Quantity("0.85408", "3"),
+            Quantity("2.72", "3"),
+            Quantity("0.314", "3"),
+        ),
+        (
+            Quantity("0.085408", "3"),
+            Quantity("2.72", "3"),
+            Quantity("0.0314", "3"),
+        ),
+        (
+            Quantity("0.0085408", "3"),
+            Quantity("2.72", "3"),
+            Quantity("0.00314", "3"),
+        ),
+        (
+            Quantity("3.1415", "5"),
+            Quantity("2.72", constant=True),
+            Quantity("1.154963235294117647058823529", "5"),
+        ),
+        (
+            Quantity("3.1415", constant=True),
+            Quantity("2.72", "3"),
+            Quantity("1.154963235294117647058823529", "3"),
+        ),
+        (
+            Quantity("3.1415", constant=True),
+            Quantity("2.72", constant=True),
+            Quantity("1.154963235294117647058823529", constant=True),
+        ),
+    ],
+)
+def test_div(num, den, expected):
     """Quantities should divide."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
-    # 8.5408 / 2.72 = 3.14
-    assert Quantity("8.5408", "3") / Quantity("2.72", "3") == Quantity("3.14", "3")
-    assert Quantity("8.5408", "3") / Quantity("0.272", "3") == Quantity("31.4", "3")
-    assert Quantity("8.5408", "3") / Quantity("0.0272", "3") == Quantity("314", "3")
-    assert Quantity("85408", "3") / Quantity("272", "3") == Quantity("314", "3")
-    assert Quantity("854080", "3") / Quantity("2720", "3") == Quantity("314", "3")
-    assert Quantity("0.0085408", "3") / Quantity("0.00272", "3") == Quantity(
-        "3.14", "3"
-    )
-    assert Quantity("0.85408", "3") / Quantity("2.72", "3") == Quantity("0.314", "3")
-    assert Quantity("0.085408", "3") / Quantity("2.72", "3") == Quantity("0.0314", "3")
-    assert Quantity("0.0085408", "3") / Quantity("2.72", "3") == Quantity(
-        "0.00314", "3"
-    )
-    # Constants.
-    assert Quantity("3.1415", "5") / Quantity("2.72", "3", constant=True) == Quantity(
-        "1.154963235294117647058823529", "5"
-    )
-    assert Quantity("3.1415", "5", constant=True) / Quantity("2.72", "3") == Quantity(
-        "1.154963235294117647058823529", "3"
-    )
-    assert Quantity("3.1415", "5", constant=True) / Quantity(
-        "2.72", "3", constant=True
-    ) == Quantity("1.154963235294117647058823529", "3", constant=True)
+    actual = num / den
+    assert actual == expected
 
 
-def test_div_bad_types():
+@pytest.mark.parametrize(
+    "num, den",
+    [
+        (
+            Quantity("3.14", "3"),
+            3,
+        ),
+        (
+            3,
+            Quantity("3.14", "3"),
+        ),
+    ],
+)
+def test_div_bad_types(num, den):
     """Only quantities should divide."""
-    # Set default precision and rounding.
-    getcontext().prec = default_prec
-    getcontext().rounding = default_rounding
-
     with pytest.raises(TypeError):
-        Quantity("3.14", "3") / 3
-    with pytest.raises(TypeError):
-        3 / Quantity("3.14", "3")
+        num / den
 
 
 def test_textbook_examples():
