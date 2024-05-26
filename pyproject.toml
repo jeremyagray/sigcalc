@@ -131,16 +131,8 @@ mpmath = ">=1,<2"
 
 [tool.poetry.group.dev.dependencies]
 
-Sphinx = ">=7"
-black = ">=24"
-flake8 = ">=7"
-flake8-docstrings = ">=1"
-hypothesis = ">=6"
-isort = ">=5"
 pccc = ">=0"
 pre-commit = ">=3"
-pytest = ">=8"
-pytest-cov = ">=5"
 tox = ">=4"
 
 [tool.poetry.urls]
