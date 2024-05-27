@@ -414,15 +414,15 @@ class Quantity:
 
         value = self.value.exp()
 
-        # Default precision for no abscissa.
-        figures = self.figures
-
         # Constants.
         if self.constant:
             return Quantity(
                 value,
                 constant=self.constant,
             )
+
+        # Default precision for no abscissa.
+        figures = self.figures
 
         # Chop abscissa places since they are not significant in the logarithm.
         if abs(self.value) >= One:
@@ -437,7 +437,6 @@ class Quantity:
             )
             figures = Zero
 
-        # No abscissa.
         return Quantity(
             value,
             figures,
@@ -500,15 +499,15 @@ class Quantity:
 
         value = pow(Ten, self.value)
 
-        # Default precision for no abscissa.
-        figures = self.figures
-
         # Constants.
         if self.constant:
             return Quantity(
                 value,
                 constant=self.constant,
             )
+
+        # Default precision for no abscissa.
+        figures = self.figures
 
         # Chop abscissa places since they are not significant in the logarithm.
         if abs(self.value) >= One:
@@ -523,7 +522,6 @@ class Quantity:
             )
             figures = Zero
 
-        # No abscissa.
         return Quantity(
             value,
             figures,

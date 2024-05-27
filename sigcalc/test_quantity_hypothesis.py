@@ -12,7 +12,6 @@
 
 """Quantity hypothesis tests."""
 
-import math
 from decimal import ROUND_05UP
 from decimal import ROUND_CEILING
 from decimal import ROUND_DOWN
@@ -27,10 +26,8 @@ from decimal import getcontext
 
 import mpmath
 import pytest
-from hypothesis import HealthCheck
 from hypothesis import assume
 from hypothesis import given
-from hypothesis import settings
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
 
@@ -38,6 +35,7 @@ from sigcalc import Quantity
 from sigcalc import pi
 
 # Reusable decimal constants.
+NegOne = Decimal("-1")
 Zero = Decimal("0")
 One = Decimal("1")
 Two = Decimal("2")
@@ -57,6 +55,38 @@ def quantities(draw, min_value=None, max_value=None):
                 min_value=min_value,
                 max_value=max_value,
             )
+        ),
+        draw(
+            st.integers(
+                min_value=1,
+                max_value=100,
+            )
+        ),
+        draw(st.booleans()),
+    )
+
+
+# Generate quantities that have insufficient precision for exponential
+# calculations.
+@composite
+def quantities_insufficient_precision(draw, min_value=None, max_value=None):
+    """Generate quantities with insufficient exponential precision."""
+    return Quantity(
+        draw(
+            st.one_of(
+                st.decimals(
+                    allow_nan=False,
+                    allow_infinity=False,
+                    min_value=One,
+                    max_value=Thousand,
+                ),
+                st.decimals(
+                    allow_nan=False,
+                    allow_infinity=False,
+                    min_value=-Thousand,
+                    max_value=NegOne,
+                ),
+            ),
         ),
         draw(
             st.integers(
@@ -205,13 +235,19 @@ def test_almost_equal_pass_eps_hypothesis(one, r):
 def test_almost_equal_hypothesis(one, two, r):
     """Should determine approximate equality."""
     if one.figures == two.figures:
-        eps = pow(mpmath.mpf("2"), -getcontext().prec + 4)
+        eps = mpmath.mpmathify("1e-25")
         if mpmath.mpmathify(abs(one.value - two.value)) > eps:
             assert not one.almosteq(two)
         else:
             assert one.almosteq(two)
     else:
         assert not one.almosteq(two)
+
+
+@given(quantities(), rounding())
+def test_almost_equal_idempotent_hypothesis(one, r):
+    """Should determine approximate equality."""
+    assert one.almosteq(one)
 
 
 @given(quantities(), rounding())
@@ -308,48 +344,7 @@ def test_constant_setter_hypothesis(q, r, c):
     assert q.constant is c
 
 
-# Exponential function tests.
-@given(quantities(), rounding())
-def test_exp_hypothesis(q, r):
-    """Should calculate the exponential of ``Quantity`` objects."""
-    # Really need to round-trip with ln, since this repeats the tested
-    # logic for significance.
-
-    # Avoid decimal overflow.
-    assume(q.value < Thousand)
-    assume(q.value > -Thousand)
-
-    # Avoid ambiguous zero warning.
-    assume(q.value != Zero)
-
-    # Ensure sufficient precision.
-    assume(q.figures > (q.value.adjusted() + One))
-
-    getcontext().rounding = r
-
-    actual = q.exp()
-
-    figures = q.figures
-
-    if q.constant:
-        expected = Quantity(
-            q.value.exp(),
-            constant=q.constant,
-        )
-    elif abs(q.value) >= One:
-        # Magnitude of abscissa is greater than one; chop abscissa places.
-        figures = q.figures - (q.value.adjusted() + One)
-
-    expected = Quantity(
-        q.value.exp(),
-        figures,
-        constant=q.constant,
-    )
-
-    assert actual.almosteq(expected)
-    assert actual.constant == expected.constant
-
-
+# Exponential and logarithm function tests.
 @given(
     st.integers(
         min_value=1,
@@ -371,22 +366,9 @@ def test_exp_ambiguous_zero_hypothesis(figures, constant, r):
     assert actual == expected
 
 
-@settings(
-    suppress_health_check=[
-        HealthCheck.filter_too_much,
-        HealthCheck.too_slow,
-    ],
-)
-@given(quantities(), rounding())
+@given(quantities_insufficient_precision(), rounding())
 def test_exp_insufficient_precision_hypothesis(q, r):
     """Should warn on insufficient precision."""
-    # Avoid decimal overflow.
-    assume(q.value < Thousand)
-    assume(q.value > -Thousand)
-
-    # Avoid ambiguous zero warning.
-    assume(q.value != Zero)
-
     # Ensure insufficient precision.
     assume(q.figures <= (q.value.adjusted() + One))
 
@@ -405,43 +387,41 @@ def test_exp_insufficient_precision_hypothesis(q, r):
 
 
 @given(quantities(), rounding())
-def test_exp10_hypothesis(q, r):
-    """Should calculate the base 10 exponential of ``Quantity`` objects."""
-    # Really need to round-trip with log10, since this repeats the
-    # tested logic for significance.
+def test_ln_exp_hypothesis(expected, mode):
+    """Should round trip exponential of natural logarithm."""
+    # Avoid logarithm domain problems.
+    assume(expected.value > Zero)
+    # Avoid ambiguous zero.
+    assume(expected.value != One)
 
+    # Set rounding context.
+    getcontext().rounding = mode
+
+    actual = expected.ln().exp()
+
+    assert actual.almosteq(expected, "1e-25")
+    assert actual.constant == expected.constant
+
+
+@given(quantities(), rounding())
+def test_exp_ln_hypothesis(expected, mode):
+    """Should round trip natural logarithm of exponential."""
     # Avoid decimal overflow.
-    assume(q.value < Thousand)
-    assume(q.value > -Thousand)
+    assume(expected.value < Thousand)
+    assume(expected.value > -Thousand)
 
     # Avoid ambiguous zero warning.
-    assume(q.value != Zero)
+    assume(expected.value != Zero)
 
     # Ensure sufficient precision.
-    assume(q.figures > (q.value.adjusted() + One))
+    assume(expected.figures > (expected.value.adjusted() + One))
 
-    getcontext().rounding = r
+    # Set rounding context.
+    getcontext().rounding = mode
 
-    actual = q.exp10()
+    actual = expected.exp().ln()
 
-    figures = q.figures
-
-    if q.constant:
-        expected = Quantity(
-            pow(Ten, q.value),
-            constant=q.constant,
-        )
-    elif abs(q.value) >= One:
-        # Magnitude of abscissa is greater than one; chop abscissa places.
-        figures = q.figures - (q.value.adjusted() + One)
-
-    expected = Quantity(
-        pow(Ten, q.value),
-        figures,
-        constant=q.constant,
-    )
-
-    assert actual.almosteq(expected)
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -466,22 +446,9 @@ def test_exp10_ambiguous_zero_hypothesis(figures, constant, r):
     assert actual == expected
 
 
-@settings(
-    suppress_health_check=[
-        HealthCheck.filter_too_much,
-        HealthCheck.too_slow,
-    ],
-)
-@given(quantities(), rounding())
+@given(quantities_insufficient_precision(), rounding())
 def test_exp10_insufficient_precision_hypothesis(q, r):
     """Should warn on insufficient precision."""
-    # Avoid decimal overflow.
-    assume(q.value < Thousand)
-    assume(q.value > -Thousand)
-
-    # Avoid ambiguous zero warning.
-    assume(q.value != Zero)
-
     # Ensure insufficient precision.
     assume(q.figures <= (q.value.adjusted() + One))
 
@@ -499,6 +466,46 @@ def test_exp10_insufficient_precision_hypothesis(q, r):
     assert actual.constant == expected.constant
 
 
+@given(quantities(), rounding())
+def test_log10_exp10_hypothesis(expected, mode):
+    """Should round trip base 10 exponential and logarithm."""
+    # Avoid logarithm domain problems.
+    assume(expected.value > Zero)
+    # Avoid ambiguous zero.
+    assume(expected.value != One)
+
+    # Set rounding context.
+    getcontext().rounding = mode
+
+    actual = expected.log10().exp10()
+
+    assert actual.almosteq(expected, "1e-25")
+    assert actual.constant == expected.constant
+
+
+@given(quantities(), rounding())
+def test_exp10_log10_hypothesis(expected, mode):
+    """Should round trip base 10 logarithm and exponential."""
+    # Avoid decimal overflow.
+    assume(expected.value < Thousand)
+    assume(expected.value > -Thousand)
+
+    # Avoid ambiguous zero warning.
+    assume(expected.value != Zero)
+
+    # Ensure sufficient precision.
+    assume(expected.figures > (expected.value.adjusted() + One))
+
+    # Set rounding context.
+    getcontext().rounding = mode
+
+    actual = expected.exp10().log10()
+
+    assert actual.almosteq(expected, "1e-25")
+    assert actual.constant == expected.constant
+
+
+# Power function tests.
 @given(quantities(), quantities(), rounding())
 def test_power_hypothesis(base, exp, r):
     """Should calculate powers of ``Quantity`` objects."""
@@ -546,104 +553,6 @@ def test_sqrt_hypothesis(q, r):
     assert q.constant == e.constant
 
 
-# Logarithmic function tests.
-@given(quantities(), rounding())
-def test_ln_hypothesis(q, r):
-    """Should calculate the natural logarithm of ``Quantity`` objects."""
-    # Avoid logarithm domain problems.
-    assume(q.value > Zero)
-    assume(not math.isnan(q.value))
-
-    getcontext().rounding = r
-    actual = q.ln()
-
-    # Calculate significant figures.
-    if not q.constant and (abs(q.value) >= One.exp() or abs(q.value) <= -One.exp()):
-        # Include abscissa digits.
-        a = q.value.ln().adjusted() + 1
-    else:
-        # No abscissa digits.
-        a = 0
-
-    expected = Quantity(
-        q.value.ln(),
-        q.figures + a,
-        q.constant,
-    )
-
-    assert actual.almosteq(expected)
-    assert actual.constant == expected.constant
-
-
-@given(quantities(), rounding())
-def test_log10_hypothesis(q, r):
-    """Should calculate the base 10 logarithm of ``Quantity`` objects."""
-    # Avoid logarithm domain problems.
-    assume(q.value > Zero)
-    assume(not math.isnan(q.value))
-
-    getcontext().rounding = r
-
-    actual = q.log10()
-
-    # Calculate significant figures.
-    if not q.constant and (abs(q.value) >= Ten or abs(q.value) <= Decimal("0.1")):
-        # Include abscissa digits.
-        a = q.value.log10().adjusted() + One
-    else:
-        # No abscissa digits.
-        a = Zero
-
-    expected = Quantity(
-        q.value.log10(),
-        q.figures + a,
-        q.constant,
-    )
-
-    assert actual.almosteq(expected)
-    assert actual.constant == expected.constant
-
-
-# Logarithmic/exponential round trip tests.
-@given(quantities(), rounding())
-def test_ln_exp_hypothesis(expected, mode):
-    """Should round trip exponential of natural logarithm."""
-    # Avoid logarithm domain problems.
-    assume(expected.value > Zero)
-    # Avoid ambiguous zero.
-    assume(expected.value != One)
-
-    # Set rounding context.
-    getcontext().rounding = mode
-
-    actual = expected.ln().exp()
-
-    assert actual.almosteq(expected, "1e-25")
-    assert actual.constant == expected.constant
-
-
-@given(quantities(), rounding())
-def test_exp_ln_hypothesis(expected, mode):
-    """Should round trip natural logarithm of exponential."""
-    # Avoid decimal overflow.
-    assume(expected.value < Thousand)
-    assume(expected.value > -Thousand)
-
-    # Avoid ambiguous zero warning.
-    assume(expected.value != Zero)
-
-    # Ensure sufficient precision.
-    assume(expected.figures > (expected.value.adjusted() + One))
-
-    # Set rounding context.
-    getcontext().rounding = mode
-
-    actual = expected.exp().ln()
-
-    assert actual.almosteq(expected, "1e-25")
-    assert actual.constant == expected.constant
-
-
 # Trigonometric function tests.
 @given(quantities(), rounding())
 def test_sin_hypothesis(q, r):
@@ -662,7 +571,7 @@ def test_sin_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_asin_hypothesis(q, r):
     """Should calculate the inverse sine of ``Quantity`` objects."""
-    assume(q.value >= -One and q.value <= One)
+    assume(q.value >= NegOne and q.value <= One)
     e = q.asin()
 
     # Duplication; no need to test mpmath.
@@ -687,7 +596,7 @@ def test_asin_of_sin_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_sin_of_asin_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value >= -One and expected.value <= One)
+    assume(expected.value >= NegOne and expected.value <= One)
     actual = expected.asin().sin()
 
     assert actual.almosteq(expected, "1e-25")
@@ -711,7 +620,7 @@ def test_cos_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_acos_hypothesis(q, r):
     """Should calculate the inverse cosine of ``Quantity`` objects."""
-    assume(q.value >= -One and q.value <= One)
+    assume(q.value >= NegOne and q.value <= One)
     e = q.acos()
 
     # Duplication; no need to test mpmath.
@@ -736,7 +645,7 @@ def test_acos_of_cos_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_cos_of_acos_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value >= -One and expected.value <= One)
+    assume(expected.value >= NegOne and expected.value <= One)
     actual = expected.acos().cos()
 
     assert actual.almosteq(expected, "1e-25")
@@ -809,7 +718,7 @@ def test_csc_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_acsc_hypothesis(q, r):
     """Should calculate the inverse cosecant of ``Quantity`` objects."""
-    assume(q.value >= One or q.value <= -One)
+    assume(q.value >= One or q.value <= NegOne)
 
     actual = q.acsc()
     expected = Quantity(
@@ -836,7 +745,7 @@ def test_acsc_of_csc_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_csc_of_acsc_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value <= -One or expected.value >= One)
+    assume(expected.value <= NegOne or expected.value >= One)
     actual = expected.acsc().csc()
 
     assert actual.almosteq(expected, "1e-25")
@@ -862,7 +771,7 @@ def test_sec_hypothesis(q, r):
 @given(quantities(), rounding())
 def test_asec_hypothesis(q, r):
     """Should calculate the inverse secant of ``Quantity`` objects."""
-    assume(q.value >= One or q.value <= -One)
+    assume(q.value >= One or q.value <= NegOne)
 
     actual = q.asec()
     expected = Quantity(
@@ -889,7 +798,7 @@ def test_asec_of_sec_hypothesis(expected, r):
 @given(quantities(), rounding())
 def test_sec_of_asec_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value <= -One or expected.value >= One)
+    assume(expected.value <= NegOne or expected.value >= One)
     actual = expected.asec().sec()
 
     assert actual.almosteq(expected, "1e-25")
@@ -1129,7 +1038,7 @@ def test_atanh_of_tanh_hypothesis(expected, r):
 
 @given(
     quantities(
-        min_value=-One,
+        min_value=NegOne,
         max_value=One,
     ),
     rounding(),
@@ -1319,7 +1228,7 @@ def test_coth_hypothesis(q, r):
 )
 def test_acoth_hypothesis(q, r):
     """Should calculate the inverse hyperbolic cotangent of ``Quantity`` objects."""
-    assume(q.value < -One or q.value > One)
+    assume(q.value < NegOne or q.value > One)
 
     actual = q.acoth()
     expected = Quantity(
@@ -1358,7 +1267,7 @@ def test_acoth_of_coth_hypothesis(expected, r):
 )
 def test_coth_of_acoth_hypothesis(expected, r):
     """Should return input."""
-    assume(expected.value < -One or expected.value > One)
+    assume(expected.value < NegOne or expected.value > One)
 
     actual = expected.acoth().coth()
 
