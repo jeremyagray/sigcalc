@@ -178,6 +178,29 @@ def test_almost_equal_self_hypothesis(one, r):
     assert one.almosteq(one)
 
 
+@given(
+    quantities(
+        min_value=Zero,
+        max_value=Ten,
+    ),
+    rounding(),
+)
+def test_almost_equal_pass_eps_hypothesis(one, r):
+    """Should pass both epsilons."""
+    delta = mpmath.mpmathify("1e-25")
+    abs_eps = "1"
+    rel_eps = "1"
+
+    two = Quantity(
+        one.value + delta,
+        one.figures,
+        constant=one.constant,
+    )
+    assert one.almosteq(two, rel_eps=rel_eps)
+    assert one.almosteq(two, abs_eps=abs_eps)
+    assert one.almosteq(two, rel_eps=rel_eps, abs_eps=abs_eps)
+
+
 @given(quantities(), quantities(), rounding())
 def test_almost_equal_hypothesis(one, two, r):
     """Should determine approximate equality."""
@@ -595,7 +618,7 @@ def test_ln_exp_hypothesis(expected, mode):
 
     actual = expected.ln().exp()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -617,7 +640,7 @@ def test_exp_ln_hypothesis(expected, mode):
 
     actual = expected.exp().ln()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -657,7 +680,7 @@ def test_asin_of_sin_hypothesis(expected, r):
     assume(expected.value >= -pi.value / Two and expected.value <= pi.value / Two)
     actual = expected.sin().asin()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -667,7 +690,7 @@ def test_sin_of_asin_hypothesis(expected, r):
     assume(expected.value >= -One and expected.value <= One)
     actual = expected.asin().sin()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -706,7 +729,7 @@ def test_acos_of_cos_hypothesis(expected, r):
     assume(expected.value >= Zero and expected.value <= pi.value)
     actual = expected.cos().acos()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -716,7 +739,7 @@ def test_cos_of_acos_hypothesis(expected, r):
     assume(expected.value >= -One and expected.value <= One)
     actual = expected.acos().cos()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -754,7 +777,7 @@ def test_atan_of_tan_hypothesis(expected, r):
     assume(expected.value >= -pi.value / Two and expected.value <= pi.value / Two)
     actual = expected.tan().atan()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -763,7 +786,7 @@ def test_tan_of_atan_hypothesis(expected, r):
     """Should return input."""
     actual = expected.atan().tan()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -806,7 +829,7 @@ def test_acsc_of_csc_hypothesis(expected, r):
 
     actual = expected.csc().acsc()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -816,7 +839,7 @@ def test_csc_of_acsc_hypothesis(expected, r):
     assume(expected.value <= -One or expected.value >= One)
     actual = expected.acsc().csc()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -859,7 +882,7 @@ def test_asec_of_sec_hypothesis(expected, r):
 
     actual = expected.sec().asec()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -869,7 +892,7 @@ def test_sec_of_asec_hypothesis(expected, r):
     assume(expected.value <= -One or expected.value >= One)
     actual = expected.asec().sec()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -919,7 +942,7 @@ def test_acot_of_cot_hypothesis(expected, r):
 
     actual = expected.cot().acot()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -928,7 +951,7 @@ def test_cot_of_acot_hypothesis(expected, r):
     """Should return input."""
     actual = expected.acot().cot()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -970,7 +993,7 @@ def test_asinh_of_sinh_hypothesis(expected, r):
 
     actual = expected.sinh().asinh()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -979,7 +1002,7 @@ def test_sinh_of_asinh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.asinh().sinh()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -1032,7 +1055,7 @@ def test_acosh_of_cosh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.cosh().acosh()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -1047,7 +1070,7 @@ def test_cosh_of_acosh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.acosh().cosh()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -1100,7 +1123,7 @@ def test_atanh_of_tanh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.tanh().atanh()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -1115,7 +1138,7 @@ def test_tanh_of_atanh_hypothesis(expected, r):
     """Should return input."""
     actual = expected.atanh().tanh()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -1177,7 +1200,7 @@ def test_acsch_of_csch_hypothesis(expected, r):
 
     actual = expected.csch().acsch()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -1195,7 +1218,7 @@ def test_csch_of_acsch_hypothesis(expected, r):
 
     actual = expected.acsch().csch()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -1248,7 +1271,7 @@ def test_asech_of_sech_hypothesis(expected, r):
     """Should return input."""
     actual = expected.sech().asech()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
 
 
 @given(
@@ -1262,7 +1285,7 @@ def test_sech_of_asech_hypothesis(expected, r):
     """Should return input."""
     actual = expected.asech().sech()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
 
 
 @given(
@@ -1322,7 +1345,7 @@ def test_acoth_of_coth_hypothesis(expected, r):
 
     actual = expected.coth().acoth()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant
 
 
@@ -1339,5 +1362,5 @@ def test_coth_of_acoth_hypothesis(expected, r):
 
     actual = expected.acoth().coth()
 
-    assert actual.almosteq(expected, mpmath.mpf("1e-25"))
+    assert actual.almosteq(expected, "1e-25")
     assert actual.constant == expected.constant

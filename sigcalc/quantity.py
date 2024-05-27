@@ -315,11 +315,13 @@ class Quantity:
         other : sigcalc.Quantity
             A second ``Quantity`` to compare with ``self``.
         rel_eps :
-            Passed to ``mpmath.almosteq()`` unmodified.  See the
+            Passed to ``mpmath.almosteq()`` as ``mpmath.mpf(rel_eps)``
+            if present.  See the
             `mpmmath documentation <https://mpmath.org/doc/current/general.html#mpmath.almosteq>`_
             for details.
         abs_eps :
-            Passed to ``mpmath.almosteq()`` unmodified.  See the
+            Passed to ``mpmath.almosteq()`` as ``mpmath.mpf(abs_eps)``
+            if present.  See the
             `mpmmath documentation <https://mpmath.org/doc/current/general.html#mpmath.almosteq>`_
             for details.
 
@@ -329,6 +331,19 @@ class Quantity:
             ``True`` if almost equal, ``False`` otherwise.
         """  # noqa: E501
         with mpmath.workdps(getcontext().prec):
+            if rel_eps:
+                rel_eps = mpmath.mpmathify(rel_eps)
+            if abs_eps:
+                abs_eps = mpmath.mpmathify(abs_eps)
+
+            if self.constant and other.constant:
+                return mpmath.almosteq(
+                    mpmath.mpmathify(self.value),
+                    mpmath.mpmathify(other.value),
+                    rel_eps,
+                    abs_eps,
+                )
+
             return all(
                 (
                     mpmath.almosteq(
