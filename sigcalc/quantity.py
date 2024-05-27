@@ -111,6 +111,11 @@ class Quantity:
             this is calculated by ``Quantity.from_decimal``.
         constant : bool
             Creates a constant ``Quantity``.
+
+        Returns
+        -------
+        Quantity
+            The generated ``Quantity`` instance.
         """
 
         def _places(d):
