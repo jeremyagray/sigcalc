@@ -200,6 +200,40 @@ def test_creation_from_decimal(d, constant):
     assert q.constant is not None
 
 
+@given(
+    st.decimals(
+        allow_nan=False,
+        allow_infinity=False,
+    ),
+    st.decimals(
+        allow_nan=False,
+        allow_infinity=False,
+    ),
+    st.one_of(
+        st.none(),
+        st.integers(
+            min_value=1,
+            max_value=20,
+        ),
+    ),
+    st.booleans(),
+)
+def test_random_creation(small, large, figures, constant):
+    """Should create ``Quantity`` objects."""
+    assume(small < large)
+
+    actual = Quantity.random(small, large, figures=figures, constant=constant)
+
+    assert actual.value <= large
+    assert actual.value >= small
+
+    # The other branch is tested with ``Quantity.from_decimal``.
+    if figures is not None and not constant:
+        assert actual.figures == figures
+
+    assert actual.constant == constant
+
+
 @given(quantities(), rounding())
 def test_equality_hypothesis(q, r):
     """Should order ``Quantity`` objects."""

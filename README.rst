@@ -69,6 +69,12 @@ True
 The resulting significant figures is derived from the places in the
 specified value.
 
+Or generate randomly over a range::
+
+>>> a = Quantity.random("273.15", "373.15")
+
+which is helpful for generating exercises for classes.
+
 Arithmetic for ``Quantity`` objects is implemented on the usual magic
 methods:
 

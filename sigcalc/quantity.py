@@ -12,6 +12,7 @@
 
 """Quantity class for significant figure calculations."""
 
+import random
 from decimal import Decimal
 from decimal import getcontext
 from warnings import warn
@@ -59,7 +60,7 @@ class Quantity:
         self._constant = constant
 
     @classmethod
-    def from_decimal(cls, d, constant=False):  # dead:  disable
+    def from_decimal(cls, d, constant=False):
         """Create a ``Quantity`` from a ``Decimal`` string.
 
         Return a ``Quantity`` created from a ``Decimal`` parseable string.
@@ -75,10 +76,70 @@ class Quantity:
             of the string.
         constant : bool
             Creates a constant ``Quantity``.
+
+        Returns
+        -------
+        Quantity
+            The generated ``Quantity`` instance.
         """
         val = Decimal(str(d))
         fig = len(getattr(val.as_tuple(), "digits"))
         return cls(d, fig, constant=constant)
+
+    @classmethod
+    def random(cls, small, large, figures=None, constant=False):
+        """Create a random ``Quantity``.
+
+        Return a ``Quantity`` between ``small`` and ``large``, inclusive.
+
+        >>> from sigcalc import Quantity
+        >>> Quantity.random("0", "500.00")  # doctest:  +SKIP
+        >>> Quantity.random("273.15", "373.15")  # doctest:  +SKIP
+
+        Parameters
+        ----------
+        cls : Quantity
+            The ``Quantity`` class.
+        small : str
+            A string representation of a decimal, parseable by
+            ``Decimal``.
+        large : str
+            A string representation of a decimal, parseable by
+            ``Decimal``.
+        figures : str or int
+            The number of significant figures, if present.  Otherwise,
+            this is calculated by ``Quantity.from_decimal``.
+        constant : bool
+            Creates a constant ``Quantity``.
+        """
+
+        def _places(d):
+            places = d.adjusted() - (len(getattr(d.as_tuple(), "digits")) - 1)
+            return 0 if places > 0 else places
+
+        little = Decimal(str(small))
+        big = Decimal(str(large))
+        places = min(
+            (
+                _places(little),
+                _places(big),
+            )
+        )
+
+        value = Decimal(
+            str(
+                random.randint(  # nosec:  B311
+                    int(little * pow(10, -places)),
+                    int(big * pow(10, -places)),
+                )
+                / int(pow(10, -places))
+            )
+        )
+
+        if figures:
+            return cls(value, figures, constant=constant)
+
+        return cls.from_decimal(value, constant)
 
     # Output operations.
     def __repr__(self):
