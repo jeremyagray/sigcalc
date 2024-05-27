@@ -116,7 +116,7 @@ class Quantity:
         if (
             isinstance(other, Quantity)
             and self._round() == other._round()
-            and self.figures == other.figures
+            and (self.figures == other.figures or (self.constant and other.constant))
         ):
             return True
 

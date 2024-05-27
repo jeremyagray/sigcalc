@@ -44,6 +44,7 @@ Hundred = Decimal("100")
 Thousand = Decimal("1000")
 
 
+# Generate quantities.
 @composite
 def quantities(draw, min_value=None, max_value=None):
     """Generate quantities."""
@@ -63,6 +64,24 @@ def quantities(draw, min_value=None, max_value=None):
             )
         ),
         draw(st.booleans()),
+    )
+
+
+# Generate constants.
+@composite
+def constants(draw, min_value=None, max_value=None):
+    """Generate quantities."""
+    return Quantity(
+        draw(
+            st.decimals(
+                allow_nan=False,
+                allow_infinity=False,
+                min_value=min_value,
+                max_value=max_value,
+            )
+        ),
+        None,
+        True,
     )
 
 
@@ -200,6 +219,20 @@ def test_equality_different_precision_hypothesis(q, r):
         p = Quantity(q.value, q.figures + One, q.constant)
 
     assert q != p
+
+
+@given(constants(), rounding())
+def test_equality_constants_hypothesis(one, r):
+    """Should order ``Quantity`` objects."""
+    getcontext().rounding = r
+
+    assert one == one
+
+    getcontext().prec += 1
+    two = Quantity(one.value, None, constant=True)
+
+    assert one.figures != two.figures
+    assert one == two
 
 
 @given(quantities(), rounding())

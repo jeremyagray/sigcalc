@@ -118,6 +118,9 @@ False
 >>> a <= b
 False
 
+Equal constants should be equal regardless of the significant figures
+of the instance.
+
 Rounding affects comparisons as well:
 
 >>> from decimal import ROUND_HALF_EVEN
