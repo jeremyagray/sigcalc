@@ -184,6 +184,22 @@ def test___init__creates_quantity_constants(value, figures):
     assert q.constant is True
 
 
+@given(
+    st.decimals(
+        allow_nan=False,
+        allow_infinity=False,
+    ),
+    st.booleans(),
+)
+def test_creation_from_decimal(d, constant):
+    """Should create ``Quantity`` objects."""
+    q = Quantity.from_decimal(str(d), constant=constant)
+
+    assert q.value == Decimal(d)
+    assert q.figures is not None
+    assert q.constant is not None
+
+
 @given(quantities(), rounding())
 def test_equality_hypothesis(q, r):
     """Should order ``Quantity`` objects."""
@@ -270,9 +286,9 @@ def test_almost_equal_hypothesis(one, two, r):
     if one.figures == two.figures:
         eps = mpmath.mpmathify("1e-25")
         if mpmath.mpmathify(abs(one.value - two.value)) > eps:
-            assert not one.almosteq(two)
+            assert not one.almosteq(two, eps)
         else:
-            assert one.almosteq(two)
+            assert one.almosteq(two, eps)
     else:
         assert not one.almosteq(two)
 

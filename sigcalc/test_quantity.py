@@ -898,3 +898,16 @@ def test_create_constant_idempotent():
     r.constant = False
     r.constant = False
     assert r.constant is False
+
+
+# Edge cases.
+def test_rounding_up_increases_significance():
+    """Should increase significance when rounding up a power of ten."""
+    q = Quantity("9.99", "2")
+
+    actual = q.round()
+    expected = Quantity("10", "3")
+
+    print(repr(actual))
+    print(repr(expected))
+    assert actual == expected

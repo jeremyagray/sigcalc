@@ -58,6 +58,28 @@ class Quantity:
             self.figures = getcontext().prec
         self._constant = constant
 
+    @classmethod
+    def from_decimal(cls, d, constant=False):  # dead:  disable
+        """Create a ``Quantity`` from a ``Decimal`` string.
+
+        Return a ``Quantity`` created from a ``Decimal`` parseable string.
+
+        Parameters
+        ----------
+        cls : Quantity
+            The ``Quantity`` class.
+        d : str
+            A string representation of a decimal, parseable by
+            ``Decimal``.  Sets the value from the number and the
+            number of significant figures from the specified precision
+            of the string.
+        constant : bool
+            Creates a constant ``Quantity``.
+        """
+        val = Decimal(str(d))
+        fig = len(getattr(val.as_tuple(), "digits"))
+        return cls(d, fig, constant=constant)
+
     # Output operations.
     def __repr__(self):
         """Represent a ``Quantity``."""

@@ -59,6 +59,16 @@ The precision of the underlying ``decimal`` context should adjust
 automatically to contain the number of digits specified or the number
 of significant figures, within the limits of the ``decimal`` module.
 
+Alternatively, create a ``Quantity`` object from a ``Decimal``:
+
+>>> a = Quantity.from_decimal("3.14")
+>>> b = Quantity("3.14", "3")
+>>> a == b
+True
+
+The resulting significant figures is derived from the places in the
+specified value.
+
 Arithmetic for ``Quantity`` objects is implemented on the usual magic
 methods:
 
