@@ -48,6 +48,12 @@ exclude = '''
 )
 '''
 
+[tool.coverage.run]
+
+omit = [
+  "sigcalc/ascii2py.py",
+]
+
 [tool.isort]
 
 ensure_newline_before_comments = true

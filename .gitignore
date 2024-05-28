@@ -29,3 +29,4 @@ commit
 dist/
 docs/_build/
 htmlcov
+docs/sigcalc.*.rst
