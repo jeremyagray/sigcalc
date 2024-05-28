@@ -18,9 +18,9 @@ import sys
 sys.path.insert(0, os.path.abspath(".."))
 
 project = "sigcalc"
-copyright = "2023, Jeremy A Gray"
+copyright = "2023-2024, Jeremy A Gray"
 author = "Jeremy A Gray"
-release = "0.1.1"
+release = "0.2.0"
 
 extensions = [
     "sphinx.ext.autodoc",
